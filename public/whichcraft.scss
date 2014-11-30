@@ -1,0 +1,271 @@
+@import "//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css";
+
+//  Colors
+
+$white: #fff;
+$color1: #fbf6f3;
+$color2: #efd9c9;
+$color3: #e8c5aa;
+$color4: #d76d19;
+$color5: #d55512;
+$error: #e55;
+
+//  Reset
+
+* { box-sizing: border-box; }
+
+body,
+h1,
+p { margin: 0; }
+
+button,
+input,
+textarea {
+    color: inherit;
+    font: inherit;
+    -webkit-font-smoothing: inherit;
+    letter-spacing: inherit;
+    margin: 0;
+}
+button {
+    background: 0;
+    border: 0;
+    cursor: pointer;
+    margin: 0;
+    overflow: visible;
+    padding: 0;
+    text-align: inherit;
+}
+input { line-height: normal; }
+textarea {
+    overflow: auto;
+    resize: none;
+    vertical-align: top;
+}
+
+:focus { outline: initial; }
+
+::-webkit-input-placeholder { color: $color3; }
+::-moz-placeholder { color: $color3; }
+:-ms-input-placeholder { color: $color3; }
+
+//  App
+
+html,
+body { height: 100%; }
+
+input {
+	background: initial;
+	border: initial;
+}
+
+$unit: 50px;
+
+//  WitchCraft
+
+.wc {
+	width: 100%;
+	min-height: 100%;
+	background: $color1;
+	color: rgba(0,0,0,.6);
+	font: 100%/1 "proxima-nova-soft", "Helvetica Neue", Arial, sans-serif;
+	-webkit-font-smoothing: antialiased;
+	letter-spacing: .01em;
+
+	&-app {
+		padding-top: $unit;
+
+		.standalone & { padding-top: ($unit + 20px); }
+	}
+
+	&-signin {
+		padding-bottom: 50px;
+		text-align: center;
+
+		&-title {
+			width: 100%;
+			max-width: 400px;
+		}
+		&-form {
+			max-width: 220px;
+			margin: 0 auto;
+		}
+		&-error {
+			background: $error;
+			border-radius: 2px;
+			color: $white;
+			font-size: 14px;
+			line-height: 20px;
+			opacity: 1;
+			margin-bottom: 10px;
+			padding: 5px 10px;
+			transition: .5s cubic-bezier(.2,1,.2,1);
+		}
+		&-username,
+		&-password {
+
+			&-input {
+				width: 100%;
+				border-bottom: 1px solid $color3;
+				padding: 10px;
+
+				&:focus { border-color: $color4; }
+			}
+		}
+		&-username { margin-bottom: 10px; }
+		&-password { margin-bottom: 20px; }
+		&-submit {
+			width: 100%;
+			height: 40px;
+			background: $color4;
+			border-radius: 4px;
+			color: $white;
+			font-size: 13px;
+			font-weight: 600;
+			letter-spacing: .1em;
+			text-transform: uppercase;
+
+			&:focus,
+			&:hover { background: $color5; }
+		}
+	}
+
+	&-head {
+		width: 100%;
+		height: $unit;
+		background: $white;
+		line-height: $unit;
+		position: absolute;
+		top: 0;
+		left: 0;
+
+		.standalone & {
+			height: 70px;
+			padding-top: 20px;
+		}
+
+		&-title {
+			color: $color2;
+			font-size: 15px;
+			letter-spacing: .1em;
+			text-align: center;
+			text-transform: uppercase;
+
+			&-craft { color: $color4; }
+		}
+		&-add {
+			width: $unit;
+			height: $unit;
+			color: $color4;
+			font-size: 24px;
+			line-height: $unit;
+			position: absolute;
+			right: 0;
+			bottom: 0;
+			text-align: center;
+
+			&::before {
+				content: "\f067";
+				font-family: FontAwesome;
+				-webkit-font-smoothing: initial;
+			}
+		}
+	}
+
+	&-add {
+		width: 100%;
+		height: 100%;
+		background: $white;
+		position: absolute;
+		top: 0;
+		left: 0;
+        text-align: center;
+
+		&::before {
+            width: 1px;
+            height: 100%;
+            content: '';
+            display: inline-block;
+            margin-right: -1px;
+            vertical-align: middle;
+        }
+
+		&-wrap {
+			width: 100%;
+			max-width: 400px;
+			display: inline-block;
+			padding: 40px;
+			text-align: left;
+			vertical-align: middle;
+		}
+
+		&-error {
+			background: $error;
+			border-radius: 2px;
+			color: $white;
+			font-size: 14px;
+			line-height: 20px;
+			opacity: 1;
+			margin-bottom: 10px;
+			padding: 5px 10px;
+			text-align: center;
+			transition: .5s cubic-bezier(.2,1,.2,1);
+		}
+		&-form {}
+		&-brewery,
+		&-name {
+			margin-bottom: 15px;
+
+			&-label {
+				display: block;
+				font-size: 12px;
+				letter-spacing: .1em;
+				opacity: .5;
+				text-transform: uppercase;
+			}
+			&-input {
+				width: 100%;
+				border-bottom: 1px solid $color3;
+				padding: 10px;
+
+				&:focus { border-color: $color4; }
+			}
+		}
+		&-name {
+			&-label {}
+			&-input {}
+		}
+		&-submit {
+			width: 100%;
+			height: 40px;
+			background: $color4;
+			border-radius: 4px;
+			color: $white;
+			font-size: 13px;
+			font-weight: 600;
+			letter-spacing: .1em;
+			text-align: center;
+			text-transform: uppercase;
+
+			&:focus,
+			&:hover { background: $color5; }
+		}
+	}
+}
+
+//  React Transitions
+
+.error-enter,
+.error-leave.error-leave-active {
+	line-height: 0;
+	margin-bottom: 0;
+	padding: 0 10px;
+	opacity: 0;
+}
+.error-enter-active,
+.error-leave {
+	line-height: 20px;
+	margin-bottom: 10px;
+	padding: 5px 10px;
+	opacity: 1;
+}

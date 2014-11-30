@@ -1,0 +1,21 @@
+{
+  "name": "whichcraft",
+  "version": "0.1.0",
+  "author": "Matt Born <me+code@mattborn.com>",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mattborn/whichcraft.git"
+  },
+  "engines": {
+    "node": "0.10.33",
+    "npm": "2.1.11"
+  },
+  "dependencies": {
+    "connect": "^3.3.3",
+    "forever": "^0.13.0",
+    "serve-static": "^1.7.1"
+  },
+  "scripts": {
+    "start": "./node_modules/forever/bin/forever server.js"
+  }
+}

@@ -1,0 +1,451 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>WhichCraft</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta name="mobile-web-app-capable" content="yes">
+        <script src="//use.typekit.net/exf4iwe.js"></script>
+		<script>try{Typekit.load();}catch(e){}</script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/sass.js/0.4.0/sass.js"></script>
+		<script>
+			$.get('whichcraft.scss').done(function (sass) {
+				var css = Sass.compile(sass);
+				$('<style>').html(css).appendTo('head');
+			});
+		</script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.2/backbone.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/sha3.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.8.3/moment.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/react/0.12.1/react-with-addons.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/react/0.12.1/JSXTransformer.js"></script>
+		<script type="text/jsx">
+/** @jsx React.DOM */
+
+//html5rocks.com/en/mobile/touchandmouse
+
+var dispatch = _.extend({}, Backbone.Events),
+	local = JSON.parse(localStorage.getItem('whichcraft')),
+	Model = Backbone.Model.extend({
+		defaults: {
+			activity: [
+				{id: 0}
+			],
+			brews: [
+				{
+					id: 0,
+					brewery: "Three Floyds",
+					name: "Zombie Dust"
+				}
+			],
+			dialog: null,
+			dialog_error: null,
+			done: null,
+			error: null,
+			external: null,
+			internal: null,
+			user_exists: false,
+			user_signed_in: false,
+			users: [
+				{
+					id: 1,
+					username: 'demo',
+					password: 'a4d66104193e06fe9fb4d55fbe01175f08e14cb741b9a144cc400e5ae39177a439e71fd5f30da16fad3096905b9db779b9cb35726c980b50347f3e546433ec31'
+				},
+				{
+					id: 2,
+					username: 'matt',
+					password: '5e420902efb84ee7028f707881ee8307f047c6346cf2620aeb56670873d3d6706e623472b72f78fe5f0008b71754bb83608890b320e593bae1c65c5f336c6780'
+				}
+			]
+		},
+		log: function (action, id) {
+			var activity = _.clone(this.get('activity'));
+			activity.push({
+				id: activity[activity.length - 1].id + 1,
+				user: id || this.get('user_signed_in'),
+				action: action,
+				time: new Date().getTime()
+			});
+			return activity;
+		},
+		addUser: function (username, password) {
+			var users = _.clone(this.get('users')),
+				user = {
+					id: users[users.length - 1].id + 1,
+					username: username,
+					password: CryptoJS.SHA3(password).toString()
+				};
+
+			if (!this.userExists(username)) {
+				users.push(user);
+				this.set({
+					error: null,
+					users: users
+				});
+			} else {
+				this.set('error', 'Someone else has that username.');
+			}
+		},
+		userExists: function (username) {
+			return _.find(this.get('users'), function (user) {
+				return user.username.toLowerCase() === username.toLowerCase();
+			});
+		},
+		removeUser: function (id) {
+			this.set('users', _.filter(this.get('users'), function (user) {
+				return user.id !== id;
+			}));
+		},
+		getUser: function (id) {
+			var id = id || this.get('user_signed_in');
+			return _.find(this.get('users'), function (user) {
+				return user.id === id;
+			});
+		},
+		changePassword: function (password) {
+			var id = this.get('user_signed_in'),
+				users = _.map(this.get('users'), function (user) {
+					if (user.id === id) {
+						user.password = CryptoJS.SHA3(password).toString()
+					}
+					return user;
+				});
+			this.set({
+				done: 'Password changed.',
+				users: users
+			});
+		},
+		authenticate: function (username, password) {
+			var user = this.userExists(username);
+			return user && user.password === CryptoJS.SHA3(password).toString() && user;
+		},
+		addBrew: function () {
+			//
+		},
+		getBrews: function () {
+			// body...
+		}
+	}),
+	model;
+
+if (local) {
+	model = new Model(local);
+} else {
+	model = new Model();
+}
+
+var Transition = React.addons.CSSTransitionGroup;
+
+var App = React.createClass({
+
+	getInitialState: function() {
+		return _.extend({}, model.toJSON());
+	},
+
+	componentWillMount: function () {
+		var component = this;
+		model.on('change', function (model) {
+			var json = model.toJSON();
+			component.setState(json);
+			localStorage.setItem('whichcraft', JSON.stringify(json));
+			console.log('App:componentWillMount', json);
+		});
+	},
+
+	render: function () {
+
+		console.log('App:render', this.state);
+
+		return (
+<div className={this.getClasses()}>
+	{this.getAppState()}
+</div>
+		);
+	},
+
+	getClasses: function () {
+		var classes = React.addons.classSet({
+			'wc': true,
+			'standalone': window.navigator.standalone,
+			'user-signed-in': this.state.user_signed_in
+		});
+		return classes;
+	},
+
+	getAppState: function () {
+		return !this.state.user_signed_in ? this.getExternal() : this.getInternal();
+	},
+
+	getExternal: function () {
+		switch (this.state.external) {
+			default:
+				return <Signin error={this.state.error} />;
+		}
+	},
+
+	getInternal: function () {
+		return (
+<div className="wc-app">
+	{this.getPage()}
+	<div className="wc-head">
+		<h1 className="wc-head-title">Which<span className="wc-head-title-craft">Craft</span></h1>
+		<button className="wc-head-add" onClick={this.openAdd} onTouchStart={this.openAdd} />
+	</div>
+	<button className="wc-list-signout" onClick={this.signout} onTouchStart={this.signout}>
+		<span className="button-text">Sign out</span>
+	</button>
+	<Logs />
+	{this.getDialog()}
+</div>
+		);
+	},
+
+	getPage: function () {
+		switch (this.state.internal) {
+			default:
+				return <List />;
+		}
+	},
+
+	openAdd: function (e) {
+		model.set('dialog', 'add');
+		e.preventDefault();
+	},
+
+	signout: function (e) {
+		model.set({
+			activity: model.log('signed out'),
+			user_signed_in: false
+		});
+		e.preventDefault();
+	},
+
+	getDialog: function () {
+		switch (this.state.dialog) {
+			case 'add':
+				return <Add error={this.state.dialog_error} />;
+			default:
+				return null;
+		}
+	}
+});
+
+var Signin = React.createClass({
+
+	render: function () {
+		return (
+<div className={this.getClasses()}>
+	<img className="wc-signin-title" src="https://d13yacurqjgara.cloudfront.net/users/49550/screenshots/1828792/whichcraft.png" title="WhichCraft" />
+	<form className="wc-signin-form" onSubmit={this.submit}>
+		<Transition transitionName="error">
+			{this.getError()}
+		</Transition>
+		<div className="wc-signin-username">
+			<input className="wc-signin-username-input" placeholder="Username" ref="username" />
+		</div>
+		<div className="wc-signin-password" onFocus={this.validateUser}>
+			<input className="wc-signin-password-input" placeholder="Password" ref="password" type="password" />
+		</div>
+		<button className="wc-signin-submit" type="submit">
+			<span className="button-text">Sign in</span>
+		</button>
+	</form>
+</div>
+		);
+	},
+
+	getClasses: function () {
+		var classes = React.addons.classSet({
+			'wc-signin': true
+		});
+		return classes;
+	},
+
+	submit: function (e) {
+		var username = this.refs.username.getDOMNode().value,
+			password = this.refs.password.getDOMNode().value,
+			user = model.authenticate(username, password);
+
+		e.preventDefault();
+
+		if (user) {
+			model.set({
+				activity: model.log('signed in', user.id),
+				error: null,
+				user_signed_in: user.id
+			});
+		} else {
+			model.set({
+				activity: model.log('entered wrong password'),
+				error: 'Wrong password.'
+			});
+		}
+	},
+
+	getError: function () {
+		return this.props.error && <p className="wc-signin-error">{this.props.error}</p>;
+	},
+
+	validateUser: function () {
+		var username = this.refs.username.getDOMNode().value;
+
+		if (username && !model.userExists(username)) {
+			model.set('error', 'User doesn’t exist.');
+		} else {
+			model.set('error', null);
+		}
+	}
+});
+
+var List = React.createClass({
+
+	render: function () {
+		return (
+<div className={this.getClasses()}>
+	{this.getBrewList()}
+</div>
+		);
+	},
+
+	getClasses: function () {
+		var classes = React.addons.classSet({
+			'wc-list': true
+		});
+		return classes;
+	},
+
+	getBrewList: function () {
+		var brews = model.get('brews');
+		return brews.length ? (
+<ul className="wc-list-brew-list">{this.getBrews(brews)}</ul>
+		) : this.getEmptyState();
+	},
+
+	getBrews: function (brews) {
+		var component = this;
+		return _.map(brews, function (brew) {
+			var id = brew.id;
+			return (
+<li className="wc-list-brew" key={'brew-'+ id}>{brew.brewery} <b>{brew.name}</b> {component.getDeleteButton(brews, id)}</li>
+			);
+		});
+	},
+
+	getDeleteButton: function (brews, id) {
+		return (
+<button className="wc-list-delete" onClick={this.deleteBrew.bind(null, brews, id)} onTouchStart={this.deleteBrew.bind(null, brews, id)}>
+	<span className="button-text">Delete</span>
+</button>
+		);
+	},
+
+	deleteBrew: function (brews, id) {
+		var brews = _.filter(brews, function (brew) {
+			return brew.id !== id;
+		});
+		model.set('brews', brews);
+	},
+
+	getEmptyState: function () {
+		return <div>Empty</div>;
+	}
+});
+
+var Add = React.createClass({
+
+	render: function () {
+		return (
+<div className={this.getClasses()}>
+	<div className="wc-add-wrap">
+		{this.getDialogError()}
+		<form className="wc-add-form" onSubmit={this.submit}>
+			<div className="wc-add-brewery">
+				<label className="wc-add-brewery-label" htmlFor="brewery">Brewery</label>
+				<input className="wc-add-brewery-input" id="brewery" ref="brewery" placeholder="Three Floyds" />
+			</div>
+			<div className="wc-add-name">
+				<label className="wc-add-name-label" htmlFor="name">Name</label>
+				<input className="wc-add-name-input" id="name" ref="name" placeholder="Zombie Dust" />
+			</div>
+			<button className="wc-add-submit" type="submit">
+				<span className="button-text">Add brew</span>
+			</button>
+		</form>
+		<button className="wc-add-exit" onClick={this.close} onTouchStart={this.close}>
+			<span className="button-text">Close</span>
+		</button>
+	</div>
+</div>
+		);
+	},
+
+	getClasses: function () {
+		var classes = React.addons.classSet({
+			'wc-add': true
+		});
+		return classes;
+	},
+
+	getDialogError: function () {
+		return this.props.error && (
+<p className="wc-add-error">{this.props.error}</p>
+		);
+	},
+
+	submit: function (e) {
+		e.preventDefault();
+		var brews = _.clone(model.get('brews')),
+			brew = {
+				id: brews[0] && brews[0].id + 1 || 0,
+				brewery: this.refs.brewery.getDOMNode().value,
+				name: this.refs.name.getDOMNode().value
+			};
+		if (!brew.brewery || !brew.name) {
+			model.set('dialog_error', 'Brewery and name cannot be blank.');
+		} else {
+			brews.unshift(brew);
+			model.set({
+				brews: brews,
+				dialog: null,
+				dialog_error: null
+			});
+		}
+	},
+
+	close: function () {
+		model.set({
+			dialog: null,
+			dialog_error: null
+		});
+	}
+});
+
+var Logs = React.createClass({
+
+	render: function() {
+		return <ul className="wc-logs">{_.map(model.get('activity'), function (log) {
+			return (
+<li className="wc-log"><b className="wc-log-user">{model.getUser(log.user).username}</b> {log.action +' '+ moment(log.time).fromNow()}</li>
+			);
+		})}</ul>;
+	}
+
+});
+
+$(function () {
+	window.React = React;
+	window.dispatch = dispatch;
+	window.model = model;
+	React.initializeTouchEvents(true);
+	React.render(<App />, document.body);
+});
+		</script>
+	</head>
+	<body>
+	</body>
+</html>
