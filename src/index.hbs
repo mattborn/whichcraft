@@ -11,10 +11,19 @@
       <input id="password" type="password" placeholder="Password" />
       <button type="submit">Sign in</button>
     </form>
+    <button id="logout" type="button">Sign out</button>
     <script>
       var firebase = new Firebase('https://whichcraft.firebaseio.com');
+      var authData = firebase.getAuth();
 
       var login = document.getElementById('login');
+      var logout = document.getElementById('logout');
+
+      if (authData) {
+        login.style.display = 'none';
+      } else {
+        logout.style.display = 'none';
+      }
 
       login.onsubmit = function (e) {
         e.preventDefault();
@@ -25,9 +34,14 @@
           if (error) {
             console.log(error);
           } else {
-            console.log('Great success, idiot!');
+            location.reload();
           }
         });
+      }
+
+      logout.onclick = function () {
+        firebase.unauth();
+        location.reload();
       }
     </script>
   </body>
