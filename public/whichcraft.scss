@@ -16,7 +16,13 @@ $error: #e55;
 
 body,
 h1,
-p { margin: 0; }
+p,
+ul { margin: 0; }
+
+ul {
+	list-style-type: none;
+	padding: 0;
+}
 
 button,
 input,

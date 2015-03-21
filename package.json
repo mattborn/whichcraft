@@ -15,6 +15,15 @@
     "forever": "^0.13.0",
     "serve-static": "^1.7.1"
   },
+  "devDependencies": {
+    "backbone": "latest",
+    "crypto-js": "latest",
+    "jquery": "latest",
+    "lodash": "latest",
+    "moment": "latest",
+    "react": "latest",
+    "sass": "latest"
+  },
   "scripts": {
     "start": "./node_modules/forever/bin/forever server.js"
   }

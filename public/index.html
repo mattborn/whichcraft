@@ -33,12 +33,23 @@ var dispatch = _.extend({}, Backbone.Events),
 	Model = Backbone.Model.extend({
 		defaults: {
 			activity: [
-				{id: 0}
+				{
+					id: 0,
+					user: 1,
+					action: 'started activity log',
+					time: 1418600000000
+				}
+			],
+			breweries: [
+				{
+					id: 0,
+					name: "Three Floyds"
+				}
 			],
 			brews: [
 				{
 					id: 0,
-					brewery: "Three Floyds",
+					brewery: 0,
 					name: "Zombie Dust"
 				}
 			],
@@ -54,12 +65,14 @@ var dispatch = _.extend({}, Backbone.Events),
 				{
 					id: 1,
 					username: 'demo',
-					password: 'a4d66104193e06fe9fb4d55fbe01175f08e14cb741b9a144cc400e5ae39177a439e71fd5f30da16fad3096905b9db779b9cb35726c980b50347f3e546433ec31'
+					password: 'a4d66104193e06fe9fb4d55fbe01175f08e14cb741b9a144cc400e5ae39177a439e71fd5f30da16fad3096905b9db779b9cb35726c980b50347f3e546433ec31',
+					brews: [0]
 				},
 				{
 					id: 2,
 					username: 'matt',
-					password: '5e420902efb84ee7028f707881ee8307f047c6346cf2620aeb56670873d3d6706e623472b72f78fe5f0008b71754bb83608890b320e593bae1c65c5f336c6780'
+					password: '5e420902efb84ee7028f707881ee8307f047c6346cf2620aeb56670873d3d6706e623472b72f78fe5f0008b71754bb83608890b320e593bae1c65c5f336c6780',
+					brews: [0]
 				}
 			]
 		},
@@ -127,8 +140,15 @@ var dispatch = _.extend({}, Backbone.Events),
 		addBrew: function () {
 			//
 		},
-		getBrews: function () {
-			// body...
+		getBrewery: function (id) {
+			return _.find(this.get('breweries'), function (brewery) {
+				return brewery.id === id;
+			});
+		},
+		getBrews: function (ids) {
+			return _.filter(this.get('brews'), function (brew) {
+				return brew.id === ids;
+			});
 		}
 	}),
 	model;
@@ -329,9 +349,10 @@ var List = React.createClass({
 	getBrews: function (brews) {
 		var component = this;
 		return _.map(brews, function (brew) {
-			var id = brew.id;
+			var id = brew.id,
+				brewery = model.getBrewery(brew.brewery);
 			return (
-<li className="wc-list-brew" key={'brew-'+ id}>{brew.brewery} <b>{brew.name}</b> {component.getDeleteButton(brews, id)}</li>
+<li className="wc-list-brew" key={'brew-'+ id}>{brewery.name} <b>{brew.name}</b> {component.getDeleteButton(brews, id)}</li>
 			);
 		});
 	},
