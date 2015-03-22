@@ -6,42 +6,193 @@
   </head>
   <body>
     <h1>Firebase Demo</h1>
+
     <form id="login">
       <input id="email" placeholder="Email" />
       <input id="password" type="password" placeholder="Password" />
       <button type="submit">Sign in</button>
     </form>
+
     <button id="logout" type="button">Sign out</button>
+
+    <form id="addbrew">
+      <input id="breweryName" placeholder="Brewery Name" />
+      <input id="brewName" placeholder="Brew Name" />
+      <button type="submit">Add</button>
+    </form>
+
+    <ul id="brewlist"></ul>
+
     <script>
-      var firebase = new Firebase('https://whichcraft.firebaseio.com');
-      var authData = firebase.getAuth();
+      // Whichcraft class
+      // Handles Firebasey things
+
+      function Whichcraft(baseURL, newContext) {
+        var self = this;
+        this._name = null;
+        this._firebase = null;
+        this._mainUser = null;
+        this._baseURL = baseURL;
+
+        if (!baseURL || typeof baseURL != "string") {
+          throw new Error("Invalid baseURL provided");
+        }
+        this._firebase = new Firebase(
+          baseURL, newContext || false ? new Firebase.Context() : null
+        );
+
+        this._firebase.onAuth(self._onLoginStateChange.bind(self));
+      }
+
+      Whichcraft.prototype._onLoginStateChange = function(user) {
+        var self = this;
+        if (user) {
+          this.onLogin(user);
+        } else {
+          this.onLogout();
+        }
+      };
+
+      Whichcraft.prototype.login = function(email, password) {
+        var self = this;
+        this._firebase.authWithPassword({
+          email: email,
+          password: password
+        }, function (user) {
+          location.reload();
+        });
+      };
+
+      Whichcraft.prototype.logout = function() {
+        this._firebase.unauth(function () {
+          location.reload();
+        });
+      };
+
+      Whichcraft.prototype.onLogin = function(user) {
+        if (!user) { return; }
+        var self = this;
+
+        this._uid = user.uid;
+        this._mainUser = self._firebase.child("users").child(this._uid);
+
+        // var isNewUser = true;
+        // if (isNewUser) {
+        //   // save the user's profile into Firebase so we can list users,
+        //   // use them in Security and Firebase Rules, and show profiles
+        //   self._firebase.child("users").child(user.uid).update({
+        //     provider: user.provider,
+        //     name: user.password.email.replace(/@.*/, '')
+        //   });
+        // }
+      };
+
+      Whichcraft.prototype.onLogout = function() {
+        this._user = null;
+        this._facebookId = null;
+        this._mainUser = null;
+        this._fullName = null;
+        this._name = null;
+      }
+
+      Whichcraft.prototype.isLoggedIn = function() {
+        return !!this._uid;
+      };
+
+      Whichcraft.prototype.createBrewery = function(name) {
+        var self = this;
+        // Add Brewery
+        var breweryRef = this._firebase.child("breweries").push();
+        var breweryId = breweryRef.key();
+        this._firebase.child("breweries").child(breweryId).set({
+          name: name
+        });
+        return breweryId;
+      };
+
+      Whichcraft.prototype.addBrewToBrewery = function(breweryId, brewId) {
+        this._firebase.child("breweries").child(breweryId).child("brews").child(brewId).set(true);
+      };
+
+      Whichcraft.prototype.addBreweryToUser = function(breweryId) {
+        this._mainUser.child("breweries").child(breweryId).set(true);
+        this._firebase.child("breweries").child(breweryId).child("users").child(this._uid).set(true);
+      };
+
+      Whichcraft.prototype.addBrewToUser = function(brewId) {
+        this._mainUser.child("brews").child(brewId).set(true);
+        this._firebase.child("brews").child(brewId).child("users").child(this._uid).set(true);
+      };
+
+      Whichcraft.prototype.createBrew = function(name, brewery) {
+        var self = this;
+        // Create brewery
+        var breweryId = this.createBrewery(name);
+
+        // Create brew
+        var brewRef = this._firebase.child("brews").push();
+        var brewId = brewRef.key();
+        this._firebase.child("brews").child(brewId).set({
+          name: brewery,
+          brewery: breweryId
+        });
+
+        // Add brew to brewery and both to current user
+        this.addBrewToBrewery(breweryId, brewId);
+        this.addBrewToUser(brewId);
+        this.addBreweryToUser(breweryId);
+      };
+
+      Whichcraft.prototype.getUserBrews = function(callback) {
+        var self = this;
+
+        self._mainUser.child("brews").on("child_added", function(snap) {
+          self._firebase.child("brews").child(snap.key()).once("value", function(snap) {
+            var brewName = snap.val().name;
+
+            if (typeof callback === 'function') {
+              callback(brewName);
+            } else {
+              console.log(brewName);
+            }
+          }, function (errorObject) {
+            console.log("The read failed: " + errorObject.code);
+          });
+        });
+      };
+
+
+      // UI Stuff
+      // To be Reactified
+
+      window.w = new Whichcraft('https://whichcraft.firebaseio.com');
 
       var login = document.getElementById('login');
       var logout = document.getElementById('logout');
+      var addbrew = document.getElementById('addbrew');
 
-      if (authData) {
+      if (w.isLoggedIn()) {
+        w.getUserBrews(function (brewName) {
+          document.getElementById('brewlist').insertAdjacentHTML("beforeend", "<li>" + brewName + "</li>");
+        });
         login.style.display = 'none';
       } else {
         logout.style.display = 'none';
+        addbrew.style.display = 'none';
       }
 
       login.onsubmit = function (e) {
         e.preventDefault();
-        firebase.authWithPassword({
-          email: document.getElementById('email').value,
-          password: document.getElementById('password').value
-        }, function (error, authData) {
-          if (error) {
-            console.log(error);
-          } else {
-            location.reload();
-          }
-        });
+        w.login(document.getElementById('email').value, document.getElementById('password').value);
       }
 
       logout.onclick = function () {
-        firebase.unauth();
-        location.reload();
+        w.logout();
+      }
+
+      addbrew.onsubmit = function (e) {
+        e.preventDefault();
+        w.createBrew(document.getElementById('breweryName').value, document.getElementById('brewName').value);
       }
     </script>
   </body>
