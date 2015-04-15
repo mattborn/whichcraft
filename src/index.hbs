@@ -1,0 +1,257 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.6.0/lodash.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.2/moment.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.13.1/react-with-addons.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.13.1/JSXTransformer.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-router/0.13.2/ReactRouter.js"></script>
+<script type="text/jsx">
+
+var Router = ReactRouter;
+var Route = Router.Route;
+var DefaultRoute = Router.DefaultRoute;
+var NotFoundRoute = Router.NotFoundRoute;
+var RouteHandler = Router.RouteHandler;
+var Link = Router.Link;
+
+var App = React.createClass({
+
+  render: function () {
+    var style = {};
+    return (
+      <div style={style}>
+        <Link to="app">Splash</Link>
+        <Link to="alpha">Alpha</Link>
+        <Link to="register">Register</Link>
+        <Link to="login">Login</Link>
+        <Link to="brews">Brews</Link>
+        <Link to="add">Add</Link>
+        <Link to="/brew/1">Brew #1</Link>
+        <Link to="/brew/1/edit">Edit</Link>
+        <Link to="breweries">Breweries</Link>
+        <Link to="/brewery/1">Brewery #1</Link>
+        <Link to="feedback">Feedback</Link>
+        <Link to="account">Account</Link>
+        <Link to="status">Status</Link>
+        <RouteHandler {...this.props} />
+      </div>
+    );
+  }
+});
+
+var LogoMark = React.createClass({
+
+  render: function () {
+    var style = {};
+    return (
+      <svg viewBox="0 0 100 100">
+        <path d="M86,2h1c0.6,0,1-0.4,1-1s-0.4-1-1-1H11c-0.6,0-1,0.4-1,1s0.4,1,1,1h1C12,2,0,34,0,50c0,30,22.4,46,50,46
+        s50-16,50-46C100,34,86,2,86,2z"/>
+      </svg>
+    );
+  }
+});
+var LogoType = React.createClass({
+
+  render: function () {
+    var style = {};
+    return (
+      <div style={style} />
+    );
+  }
+});
+var Splash = React.createClass({
+
+  render: function () {
+    var style = {};
+    return (
+      <div style={style}>Splash, yo.</div>
+    );
+  }
+});
+var Alpha = React.createClass({
+
+  render: function () {
+    var style = {};
+    return (
+      <div style={style}>Alpha, yo.</div>
+    );
+  }
+});
+var Register = React.createClass({
+
+  render: function () {
+    var style = {};
+    return (
+      <div style={style}>Register, yo.</div>
+    );
+  }
+});
+var Login = React.createClass({
+
+  render: function () {
+    var style = {};
+    return (
+      <div style={style}><LogoMark />Login, yo.</div>
+    );
+  }
+});
+var Menu = React.createClass({
+
+  render: function () {
+    var style = {};
+    return (
+      <div style={style}>Menu, yo.</div>
+    );
+  }
+});
+var BrewForm = React.createClass({
+
+  render: function () {
+    var style = {};
+    return (
+      <div style={style}>BrewForm, yo.</div>
+    );
+  }
+});
+var Brews = React.createClass({
+
+  render: function () {
+    var style = {};
+    return (
+      <div style={style}>Brews, yo.</div>
+    );
+  }
+});
+var BrewItem = React.createClass({
+
+  render: function () {
+    var style = {};
+    return (
+      <div style={style}>BrewItem, yo.</div>
+    );
+  }
+});
+var Breweries = React.createClass({
+
+  render: function () {
+    var style = {};
+    return (
+      <div style={style}>Breweries, yo.</div>
+    );
+  }
+});
+var Brew = React.createClass({
+
+  render: function () {
+    var style = {};
+    console.log(this.props.params);
+    return (
+      <div style={style}>Single Brew #{this.props.params.brewId}, yo.</div>
+    );
+  }
+});
+var BrewNotFound = React.createClass({
+
+  render: function () {
+    var style = {};
+    return (
+      <div style={style}>Brew not found, yo.</div>
+    );
+  }
+});
+var Brewery = React.createClass({
+
+  render: function () {
+    var style = {};
+    return (
+      <div style={style}>Single Brewery, yo.</div>
+    );
+  }
+});
+var BreweryItem = React.createClass({
+
+  render: function () {
+    var style = {};
+    return (
+      <div style={style}>Single Brewery, yo.</div>
+    );
+  }
+});
+var BreweryNotFound = React.createClass({
+
+  render: function () {
+    var style = {};
+    return (
+      <div style={style}>Brewery not found, yo.</div>
+    );
+  }
+});
+var Account = React.createClass({
+
+  render: function () {
+    var style = {};
+    return (
+      <div style={style}>Account, yo.</div>
+    );
+  }
+});
+var Pro = React.createClass({
+
+  render: function () {
+    var style = {};
+    return (
+      <div style={style}>Pro, yo.</div>
+    );
+  }
+});
+var Feedback = React.createClass({
+
+  render: function () {
+    var style = {};
+    return (
+      <div style={style}>Feedback, yo.</div>
+    );
+  }
+});
+var Status = React.createClass({
+
+  render: function () {
+    var style = {};
+    return (
+      <div style={style}>Status, yo.</div>
+    );
+  }
+});
+var NotFound = React.createClass({
+
+  render: function () {
+    var style = {};
+    return (
+      <div style={style}>Not found, yo.</div>
+    );
+  }
+});
+
+var routes = (
+  <Route name="app" path="/" handler={App}>
+    <DefaultRoute handler={Splash} />
+    <Route name="alpha" handler={Alpha} />
+    <Route name="register" handler={Register} />
+    <Route name="login" handler={Login} />
+    <Route name="feedback" handler={Feedback} />
+    <Route name="account" handler={Account} />
+    <Route name="status" handler={Status} />
+    <Route name="brews" handler={Brews} />
+    <Route name="add" path="/brew/add" handler={BrewForm} />
+    <Route name="brew" path="/brew/:brewId" handler={Brew} />
+    <Route name="edit" path="/brew/:brewId/edit" handler={BrewForm} />
+    <Route name="breweries" handler={Breweries} />
+    <Route name="brewery" path="/brewery/:breweryId" handler={Brewery} />
+    <NotFoundRoute handler={NotFound} />
+  </Route>
+);
+
+Router.run(routes, function (Handler, state) {
+  React.render(<Handler params={state.params} />, document.body);
+});
+
+</script>
