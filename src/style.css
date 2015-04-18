@@ -73,9 +73,11 @@ button::-moz-focus-inner {
 /* whichcraft styles */
 
 html {
+  height: 100%;
   color: #444;
   font: 15px/1 "proxima-nova-soft", "Helvetica Neue", Arial, sans-serif;
   letter-spacing: .01em;
   -webkit-font-smoothing: antialiased;
   text-align: center;
 }
+body { height: 100%; }

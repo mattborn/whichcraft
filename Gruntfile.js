@@ -44,6 +44,10 @@ module.exports = function (grunt) {
           {
             dest: 'build/style.css',
             src: 'src/style.css'
+          },
+          {
+            dest: 'build/loader.svg',
+            src: 'src/loader.svg'
           }
         ]
       }

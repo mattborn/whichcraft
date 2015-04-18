@@ -244,7 +244,7 @@ var App = React.createClass({
           })
         });
       } else {
-        self.setState({user: null});
+        self.setState({user: false});
       }
     });
   },
@@ -275,30 +275,77 @@ var App = React.createClass({
   render: function () {
     var style = {};
     var user = this.state.user;
-    return user ? (
-      <div style={style}>
-        <Brews app={this} brews={this.state.userBrews} />
-        <BrewForm user={this.state.uid} />
-        <Brew brew={testData.users[0].brews[1]} />
-        <Confirm />
-        <Account user={testData.users[0]} />
-        <Status />
-        <Splash />
+    if (user === null) {
+      return <Loading />;
+    } else {
+      return user ? (
+        <div style={style}>
+          <Brews app={this} brews={this.state.userBrews} />
+          <BrewForm user={this.state.uid} />
+          <Brew brew={testData.users[0].brews[1]} />
+          <Confirm />
+          <Account user={testData.users[0]} />
+          <Status />
+          <Splash />
+        </div>
+      ) : (
+        <Login app={this} />
+      );
+    }
+  }
+});
+
+var Center = React.createClass({
+  render: function () {
+    var style = {
+      flex: {
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      },
+      item: {
+        flex: 'none'
+      }
+    };
+    return (
+      <div style={style.flex}>
+        <div style={style.item}>
+          {this.props.children}
+        </div>
       </div>
-    ) : (
-      <Login app={this} />
     );
   }
 });
 
 var Login = React.createClass({
+  getInitialState: function () {
+    return {
+      error: false,
+      validated: false
+    };
+  },
+  _validate: function () {
+    var email = this.refs.email.getDOMNode().value;
+    var password = this.refs.password.getDOMNode().value;
+    if (email && password) {
+      this.setState({validated: true});
+    } else {
+      this.setState({validated: false});
+    }
+    this.setState({error: false});
+  },
   _submit: function (e) {
     var self = this;
     e.preventDefault();
     firebase.authWithPassword({
       email: this.refs.email.getDOMNode().value,
       password: this.refs.password.getDOMNode().value
-    }, function (error, user) {});
+    }, function (error, user) {
+      if (error) {
+        self.setState({error: true});
+      }
+    });
   },
   render: function () {
     var style = {
@@ -323,7 +370,6 @@ var Login = React.createClass({
         textAlign: 'left'
       }
     };
-    _.extend(style.login, tempFrameStyles);
     return (
       <div style={style.login}>
         <div style={style.head}>
@@ -334,25 +380,38 @@ var Login = React.createClass({
         </div>
         <form onSubmit={this._submit}>
           <Input
+            onChange={this._validate}
             placeholder='email'
             ref='email'
             treatment='thin'
             type='email' />
           <Input
+            onChange={this._validate}
             placeholder='password'
             ref='password'
             treatment='thin'
             type='password' />
           <Button
-            // disabled={true} TODO: if both are empty
+            disabled={!this.state.validated}
             style={style.submit}
             text='Sign in'
             treatment='submit'
             type='submit' />
         </form>
-        <Link style={style.forgot} text='Forgot password' />
-        <Alert text='Bummer. Wrong email or password.' treatment='error' />
+        {this.state.validated && <Link style={style.forgot} text='Forgot password' />}
+        {this.state.error && <Alert text='Bummer. Wrong email or password.' treatment='error' />}
       </div>
+    );
+  }
+});
+
+var Loading = React.createClass({
+  render: function () {
+    var style = {};
+    return (
+      <Center>
+        <img src="loader.svg" style={style} />
+      </Center>
     );
   }
 });
@@ -948,6 +1007,7 @@ var Input = React.createClass({
     _.extend(style, treatments[treatment]);
     return <input
       id={this.props.id}
+      onChange={this.props.onChange}
       onFocus={this._focus}
       onBlur={this._blur}
       placeholder={this.props.placeholder}
