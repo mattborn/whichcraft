@@ -12,7 +12,11 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.13.1/react-with-addons.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.13.1/JSXTransformer.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-router/0.13.2/ReactRouter.js"></script>
+<script src="https://cdn.firebase.com/js/client/2.0.1/firebase.js"></script>
+<script src="https://cdn.firebase.com/libs/reactfire/0.4.0/reactfire.min.js"></script>
 <script type="text/jsx">
+
+
 
 var Type = {
   large: 22,
@@ -217,11 +221,15 @@ var testData = {
   ]
 };
 
+var firebase = new Firebase('https://whichcraft.firebaseio.com');
+
 var App = React.createClass({
+  mixins: [ReactFireMixin],
   getInitialState: function () {
     return {
       page: 'login',
-      menuOpen: false
+      menuOpen: false,
+      user: null
     };
   },
   _toggleMenu: function (e) {
@@ -230,9 +238,9 @@ var App = React.createClass({
   },
   render: function () {
     var style = {};
-    return (
+    console.log('whichcraft, woot!', this.state.users);
+    return this.state.user ? (
       <div style={style}>
-        <Login />
         <Brews app={this} brews={testData.users[0].brews} />
         <BrewForm />
         <Brew brew={testData.users[0].brews[1]} />
@@ -241,11 +249,28 @@ var App = React.createClass({
         <Status />
         <Splash />
       </div>
+    ) : (
+      <Login app={this} />
     );
   }
 });
 
 var Login = React.createClass({
+  _submit: function (e) {
+    var self = this;
+    console.log('_submit');
+    e.preventDefault();
+    firebase.authWithPassword({
+      email: this.refs.email.getDOMNode().value,
+      password: this.refs.password.getDOMNode().value
+    }, function (error, user) {
+      console.log('Login:_submit', {
+        error: error,
+        user: user
+      });
+      self.props.app.bindAsObject(firebase.child('users').child(user.uid), 'user');
+    });
+  },
   render: function () {
     var style = {
       login: { padding: '0 40px' },
@@ -278,14 +303,24 @@ var Login = React.createClass({
           </svg>
           <Logotype style={style.logotype} />
         </div>
-        <Input placeholder="email" treatment="thin" type="email" />
-        <Input placeholder="password" treatment="thin" type="password" />
-        <Button
-          disabled={true}
-          style={style.submit}
-          text="Sign in"
-          treatment="submit"
+        <form onSubmit={this._submit}>
+          <Input
+            placeholder="email"
+            ref="email"
+            treatment="thin"
+            type="email" />
+          <Input
+            placeholder="password"
+            ref="password"
+            treatment="thin"
+            type="password" />
+          <Button
+            // disabled={true} TODO: if both are empty
+            style={style.submit}
+            text="Sign in"
+            treatment="submit"
           type="submit" />
+        </form>
         <Link style={style.forgot} text="Forgot password" />
         <Alert text="Bummer. Wrong email or password." treatment="error" />
       </div>
