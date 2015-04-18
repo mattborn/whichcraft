@@ -232,13 +232,22 @@ var App = React.createClass({
       user: null
     };
   },
+  componentWillMount: function() {
+    var self = this;
+    firebase.onAuth(function (user) {
+      if (user) {
+        self.bindAsObject(firebase.child('users').child(user.uid), 'user');
+      } else {
+        self.setState({user: null});
+      }
+    });
+  },
   _toggleMenu: function (e) {
     this.setState({menuOpen: !this.state.menuOpen});
     e.preventDefault();
   },
   render: function () {
     var style = {};
-    console.log('whichcraft, woot!', this.state.users);
     return this.state.user ? (
       <div style={style}>
         <Brews app={this} brews={testData.users[0].brews} />
@@ -258,18 +267,11 @@ var App = React.createClass({
 var Login = React.createClass({
   _submit: function (e) {
     var self = this;
-    console.log('_submit');
     e.preventDefault();
     firebase.authWithPassword({
       email: this.refs.email.getDOMNode().value,
       password: this.refs.password.getDOMNode().value
-    }, function (error, user) {
-      console.log('Login:_submit', {
-        error: error,
-        user: user
-      });
-      self.props.app.bindAsObject(firebase.child('users').child(user.uid), 'user');
-    });
+    }, function (error, user) {});
   },
   render: function () {
     var style = {
@@ -646,6 +648,9 @@ var Confirm = React.createClass({
 });
 
 var Account = React.createClass({
+  _logout: function () {
+    firebase.unauth();
+  },
   render: function () {
     var style = {
       account: { padding: 30 },
@@ -680,7 +685,12 @@ var Account = React.createClass({
         <span style={style.breweries}>{Math.ceil(user.brews.length * .8)}</span>
         <span style={style.breweries_label}>breweries</span>
         <Button style={style.upgrade} text="Upgrade to pro" />
-        <Button style={style.signout} text="Sign out" treatment="tiny" />
+        <Button
+          onClick={this._logout}
+          onTouchStart={this._logout}
+          style={style.signout}
+          text="Sign out"
+          treatment="tiny" />
       </div>
     );
   }
@@ -776,6 +786,8 @@ var Button = React.createClass({
     return (
       <button
         disabled={disabled}
+        onClick={this.props.onClick}
+        onTouchStart={this.props.onTouchStart}
         style={_.extend(style, this.props.style)}
         type={type}
       >
