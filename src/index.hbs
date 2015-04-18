@@ -16,8 +16,6 @@
 <script src="https://cdn.firebase.com/libs/reactfire/0.4.0/reactfire.min.js"></script>
 <script type="text/jsx">
 
-
-
 var Type = {
   large: 22,
   medium: 18,
@@ -236,7 +234,8 @@ var App = React.createClass({
     var self = this;
     firebase.onAuth(function (user) {
       if (user) {
-        self.bindAsObject(firebase.child('users').child(user.uid), 'user');
+        var user = firebase.child('users').child(user.uid);
+        self.bindAsObject(user, 'user');
       } else {
         self.setState({user: null});
       }
@@ -246,11 +245,15 @@ var App = React.createClass({
     this.setState({menuOpen: !this.state.menuOpen});
     e.preventDefault();
   },
+  getUserBrews: function () {
+    return [];
+  },
   render: function () {
     var style = {};
-    return this.state.user ? (
+    var user = this.state.user;
+    return user ? (
       <div style={style}>
-        <Brews app={this} brews={testData.users[0].brews} />
+        <Brews app={this} />
         <BrewForm />
         <Brew brew={testData.users[0].brews[1]} />
         <Confirm />
@@ -372,6 +375,9 @@ var Logotype = React.createClass({
 });
 
 var Brews = React.createClass({
+  componentDidMount: function () {
+
+  },
   render: function () {
     var style = {
       brews: {
@@ -392,6 +398,7 @@ var Brews = React.createClass({
     };
     _.extend(style.brews, scrollStyles);
     var brews = this.props.brews;
+    console.log({brews: brews});
     return (
       <div style={tempFrameStyles}>
         <div style={style.brews}>
@@ -418,7 +425,8 @@ var BrewItem = React.createClass({
     brew: React.PropTypes.shape({
       name: React.PropTypes.string.isRequired,
       brewery: React.PropTypes.string.isRequired,
-      city: React.PropTypes.string
+      city: React.PropTypes.string,
+      liked: React.PropTypes.string
     })
   },
   render: function () {
