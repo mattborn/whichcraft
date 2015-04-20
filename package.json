@@ -1,0 +1,18 @@
+{
+  "name": "whichcraft",
+  "version": "0.6.0",
+  "description": "Simple app for keeping track of which craft beers you’ve had.",
+  "main": "index.html",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mattborn/whichcraft.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mattborn/whichcraft/issues"
+  },
+  "homepage": "https://whichcraft.firebaseapp.com",
+  "dependencies": {
+    "express": "^4.12.3",
+    "serve-static": "^1.9.2"
+  }
+}

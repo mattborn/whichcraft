@@ -1,0 +1,96 @@
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+body { margin: initial; }
+h1,
+h2,
+h3 {
+  font-size: 100%;
+  margin: initial;
+}
+ol,
+ul {
+  list-style-type: none;
+  padding: initial;
+}
+p { margin: initial; }
+a { background: initial; }
+i { font-style: normal; }
+img {
+  border: initial;
+  vertical-align: top;
+}
+svg {
+  fill: currentColor;
+  vertical-align: top;
+}
+label {
+  border: initial;
+  margin: initial;
+}
+button,
+input,
+textarea {
+  border: initial;
+  border-radius: initial;
+  color: inherit;
+  font: inherit;
+  -webkit-font-smoothing: inherit;
+  letter-spacing: inherit;
+  margin: initial;
+}
+button {
+  background: initial;
+  cursor: pointer;
+  margin: initial;
+  overflow: visible;
+  padding: initial;
+  text-align: inherit;
+}
+input { line-height: normal; }
+textarea {
+  overflow: auto;
+  resize: none;
+  vertical-align: top;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: initial;
+}
+
+:focus { outline: initial; }
+:disabled { cursor: default; }
+[hidden] { display: none; }
+
+/* stackoverflow.com/a/5518143/2588140 */
+button::-moz-focus-inner {
+  border: initial;
+  padding: initial;
+}
+
+input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px white inset;
+}
+
+/* whichcraft styles */
+
+html {
+  height: 100%;
+  color: #444;
+  font: 15px/1 "proxima-nova-soft", "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: .01em;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: none;
+  text-align: center;
+}
+body { height: 100%; }
+
+.flex-center {
+  height: 100%;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+}
