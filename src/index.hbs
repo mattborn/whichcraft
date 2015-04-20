@@ -350,7 +350,7 @@ var Login = React.createClass({
   render: function () {
     var style = {
       login: { padding: '0 40px' },
-      head: { padding: '80px 0' },
+      head: { padding: '80px 0 40px' },
       logomark: {
         width: 80,
         height: 80,
@@ -787,9 +787,11 @@ var Confirm = React.createClass({
     _.extend(style, tempFrameStyles);
     return (
       <div style={style}>
-        Are you sure you want to cancel?
-        <Button text='Yep' />
-        <Button text='Nope' treatment='tiny' />
+        <Center>
+          Are you sure you want to cancel?
+          <Button text='Yep' />
+          <Button text='Nope' treatment='tiny' />
+        </Center>
       </div>
     );
   }
