@@ -54,15 +54,15 @@
             email: 'demo@whichcraft.com',
             hash: '3d9a2c9ab8f75b0d2015eae5d3649e00',
             joined: 'November 2014',
-            brews: [
+            notes: [
               {
-                name: 'Zombie Dust',
+                brew: 'Zombie Dust',
                 brewery: '3 Floyds Brewing Co.',
                 notes: 'Favorite beer by far.',
                 liked: true
               },
               {
-                name: 'Stone Enjoy By 04.20.15 IPA',
+                brew: 'Stone Enjoy By 04.20.15 IPA',
                 brewery: 'Stone Brewing Co.',
                 notes: 'Drink extra-super-tasty Stone Enjoy By IPA well before its shelf life to maximize the pungent glory that this beautiful, intense hop profile provides.',
                 liked: true
@@ -83,7 +83,7 @@
             page: 'brews',
             popover: 'add',
             user: null,
-            userBrews: []
+            notes: []
           };
         },
         componentWillMount: function() {
@@ -92,14 +92,16 @@
             if (user) {
               var brews = [];
               self.bindAsObject(firebase.child('users').child(user.uid), 'user');
-              self.getUserBrews(user.uid, function(brew){
-                self.setState({
-                  uid: user.uid,
-                  userBrews: self.state.userBrews.concat([brew])
-                })
+              self.bindAsArray(firebase.child('users').child(user.uid).child('notes'), 'notes');
+              self.setState({
+                uid: user.uid,
               });
             } else {
-              self.setState({user: false});
+              self.setState({
+                user: false,
+                uid: null,
+                notes: []
+              });
             }
           });
         },
@@ -122,26 +124,6 @@
           this.setState({menuOpen: !this.state.menuOpen});
           e.preventDefault();
         },
-        getUserBrews: function(uid, callback) {
-          firebase.child('users').child(uid).child('brews').on('child_added', function(snap) {
-            // Get brew info
-            firebase.child('brews').child(snap.key()).on('value', function(snap) {
-              var brew = snap.val();
-              // Get brewery info
-              firebase.child('breweries').child(brew.brewery).on('value', function(snap) {
-                brew['brewery'] = snap.val().name;
-                brew['city'] = snap.val().city;
-                if (typeof callback === 'function') {
-                  callback(brew);
-                } else {
-                  console.log(brew);
-                }
-              });
-            }, function (error) {
-              console.log('The read failed: ' + error.code);
-            });
-          });
-        },
         render: function () {
           var style = {
             app: {
@@ -158,7 +140,7 @@
             }
           };
           var pages = {
-            brews: <Brews app={this} brews={this.state.userBrews} />,
+            brews: <Brews app={this} notes={this.state.notes} />,
             breweries: <Breweries />,
             feedback: <Feedback />,
             account: <Account user={testData.users[0]} />,
@@ -166,7 +148,7 @@
           };
           var popovers = {
             add: <BrewForm app={this} user={this.state.uid} />,
-            brew: <Brew brew={testData.users[0].brews[1]} />,
+            brew: <Brew brew={testData.users[0].notes[1]} />,
             confirm: <Confirm />
           };
           var user = this.state.user;
@@ -347,7 +329,7 @@
         },
         getDefaultProps: function() {
           return {
-            brews: []
+            notes: []
           };
         },
         render: function () {
@@ -370,12 +352,12 @@
           };
           _.extend(style.brews, scrollStyles);
           var app = this.props.app;
-          var brews = this.props.brews;
+          var notes = this.props.notes;
           return (
             <div>
               <div style={style.brews}>
-                {brews.length ? _.map(brews, function (brew) {
-                    return <BrewItem brew={brew} key={brew.name} />;
+                {notes.length ? _.map(notes, function (note) {
+                    return <BrewItem note={note} key={note.brew} />;
                   }
                 ) : (
                   <div style={style.empty}>
@@ -394,12 +376,31 @@
       });
 
       var BrewItem = React.createClass({
+        mixins: [ReactFireMixin],
+        getInitialState: function() {
+          return {
+            brew: {
+              name: ''
+            },
+            brewery: {
+              name: '',
+              city: ''
+            }
+          };
+        },
+        componentDidMount: function () {
+          var note = this.props.note;
+          if (note) {
+            this.bindAsObject(firebase.child('brews').child(note.brew), 'brew');
+            this.bindAsObject(firebase.child('breweries').child(note.brewery), 'brewery');
+          }
+        },
         propTypes: {
-          brew: React.PropTypes.shape({
-            name: React.PropTypes.string.isRequired,
+          note: React.PropTypes.shape({
+            brew: React.PropTypes.string.isRequired,
             brewery: React.PropTypes.string.isRequired,
-            city: React.PropTypes.string,
-            liked: React.PropTypes.string
+            text: React.PropTypes.string,
+            liked: React.PropTypes.bool
           })
         },
         render: function () {
@@ -419,12 +420,13 @@
               color: Colors.light
             }
           };
-          var brew = this.props.brew;
+          var brew = this.state.brew;
+          var brewery = this.state.brewery;
           return (
-            <div style={style.brew}>
-              <h1 style={style.name}>{brew.name}</h1>
-              <p style={style.brewery}>{brew.brewery} <span style={style.city}>{brew.city}</span></p>
-            </div>
+              <div style={style.brew}>
+                <h1 style={style.name}>{brew.name}</h1>
+                <p style={style.brewery}>{brewery.name} <span style={style.city}>{brewery.city}</span></p>
+              </div>
           );
         }
       });
@@ -551,21 +553,35 @@
           firebase.child('users').child(this.props.user).child('brews').child(brewId).set(true);
           firebase.child('brews').child(brewId).child('users').child(this.props.user).set(true);
         },
-        createBrew: function(e) {
+        createNote: function(e) {
           e.preventDefault();
           var self = this;
           var name = this.refs.name.getDOMNode().value;
           var brewery = this.refs.brewery.getDOMNode().value;
+          var text = this.refs.text.getDOMNode().value;
+          var liked = true;
+          // var liked = this.refs.liked.getDOMNode().value === 'true' ? true : false;
 
           // Create brewery
+          // TODO: Check if the brewery already exists in Firebase
           var breweryId = this.createBrewery(brewery);
 
           // Create brew
+          // TODO: Check if the brew already exists in Firebase
           var brewRef = firebase.child('brews').push();
           var brewId = brewRef.key();
           firebase.child('brews').child(brewId).set({
             name: name,
             brewery: breweryId
+          });
+
+          var noteRef = firebase.child('users').child(this.props.user).child('notes').push();
+          var noteId = noteRef.key();
+          firebase.child('users').child(this.props.user).child('notes').child(noteId).set({
+            brew: brewId,
+            brewery: breweryId,
+            text: text,
+            liked: liked
           });
 
           // Add brew to brewery and both to current user
@@ -580,11 +596,10 @@
             },
             notes: { height: 100 }
           };
-          console.log({props: this.props});
           var app = this.props.app;
           return (
-            <form style={style.form} onSubmit={this.createBrew}>
-              {this.props.brew ? 'Edit brew' : 'Add brew'}
+            <form style={style.form} onSubmit={this.createNote}>
+              {this.props.note ? 'Edit brew' : 'Add brew'}
               <Label htmlFor='brewName' text='Brew name' />
               <Input
                 id='brewName'
@@ -595,7 +610,7 @@
                 placeholder='3 Floyds Brewing Co.'
                 ref='brewery' />
               <Label htmlFor='notes' text='Notes' />
-              <Textarea id='notes' placeholder='Optional' style={style.notes} />
+              <Textarea id='notes' ref='text' placeholder='Optional' style={style.notes} />
               <p>{'Would drink again? Yep Nope'}</p>
               <Button
                 // disabled='true'
@@ -648,7 +663,7 @@
             },
             rating: { margin: '0 0 20px' }
           };
-          var brew = this.props.brew;
+          var brew = this.props.note;
           return (
             <div style={style.wrap}>
               <h1 style={style.name}>{brew.name}</h1>
@@ -777,10 +792,10 @@
                 <h1 style={style.name}>{user.name}</h1>
                 <p style={style.email}>{user.email}</p>
                 <p style={style.since}>Since {user.joined}</p>
-                <span style={style.brews}>{user.brews.length}</span>
+                <span style={style.brews}>{user.notes.length}</span>
                 <span style={style.brews_label}>brews</span>
                 <span style={style.from}>from</span>
-                <span style={style.breweries}>{Math.ceil(user.brews.length * .8)}</span>
+                <span style={style.breweries}>{Math.ceil(user.notes.length * .8)}</span>
                 <span style={style.breweries_label}>breweries</span>
                 <Button style={style.upgrade} text='Upgrade to pro' />
                 <Button
