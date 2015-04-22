@@ -23,6 +23,7 @@
     <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.6.0/lodash.js'></script>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.2/moment.js'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/keymaster/1.6.1/keymaster.min.js'></script>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/react/0.13.1/react-with-addons.js'></script>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/react/0.13.1/JSXTransformer.js'></script>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/react-router/0.13.2/ReactRouter.js'></script>
@@ -107,6 +108,12 @@
             }
           });
         },
+        componentDidMount: function() {
+          key('esc', this._closePopover);
+        },
+        componentWillUnmount: function() {
+          key.unbind('esc', this._closePopover);
+        },
         _openPage: function (page, e) {
           this.setState({page: page});
           this._toggleMenu(e);
@@ -166,7 +173,9 @@
             return <Loading />;
           } else {
             return user ? (
-              <div style={style.app}>
+              <div
+                style={style.app}
+                onKeyDown={this._keydown}>
                 {pages[this.state.page]}
                 <Menu app={this} />
                 <div style={style.popover}>
@@ -444,8 +453,7 @@
           return (
               <div
                 style={style.brew}
-                onClick={app._setCurrentNote.bind(null, this.props.index)}
-                onTouchStart={app._setCurrentNote.bind(null, this.props.index)}>
+                onClick={app._setCurrentNote.bind(null, this.props.index)}>
                 <h1 style={style.name}>{brew.name}</h1>
                 <p style={style.brewery}>{brewery.name} <span style={style.city}>{brewery.city}</span></p>
               </div>
