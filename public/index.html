@@ -20,6 +20,7 @@
     </script>
   </head>
   <body>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.6.0/lodash.js'></script>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.2/moment.js'></script>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/react/0.13.1/react-with-addons.js'></script>
@@ -586,6 +587,9 @@
           var liked = true;
           // var liked = this.refs.liked.getDOMNode().value === 'true' ? true : false;
 
+          // TODO: Provide some basic validation before closing popover
+          this.props.app._closePopover(e);
+
           // Create brewery
           // TODO: Check if the brewery already exists in Firebase
           var breweryId = this.createBrewery(brewery);
@@ -594,9 +598,30 @@
           // TODO: Check if the brew already exists in Firebase
           var brewRef = firebase.child('brews').push();
           var brewId = brewRef.key();
-          firebase.child('brews').child(brewId).set({
-            name: name,
-            brewery: breweryId
+
+          // Get some brew + brewery data from BreweryDB
+          // TODO: Make sure we match the correct brew
+          // TODO: Provide some error handling, since this is somewhat fragile
+          $.ajax({
+            url:"https://www.kimonolabs.com/api/ondemand/cmagu84i?apikey=EgIYTM8HavTvDWxbAro1VOHSEB4fsRAP",
+            crossDomain: true,
+            dataType: "jsonp",
+            data: {
+              q: name
+            },
+            success: function (data) {
+              // Yucky hardcoded bullshit
+              data = JSON.parse(data['results']['collection1'][0]['data'])['data'][0];
+              firebase.child('brews').child(brewId).set({
+                name: name,
+                brewery: breweryId,
+                abv: data['abv'],
+                style: data['style']['name']
+              });
+            },
+            error: function (xhr, status) {
+              console.log(status);
+            }
           });
 
           var noteRef = firebase.child('users').child(this.props.user).child('notes').push();
@@ -654,6 +679,7 @@
         mixins: [ReactFireMixin],
         getInitialState: function() {
           return {
+            abv: '',
             brew: {
               name: ''
             },
@@ -664,6 +690,7 @@
           };
         },
         componentDidMount: function () {
+          var self = this;
           var note = this.props.note;
           if (note) {
             this.bindAsObject(firebase.child('brews').child(note.brew), 'brew');
@@ -722,10 +749,10 @@
               <h1 style={style.name}>{brew.name}</h1>
               <p style={style.brewery}>{brewery.name}</p>
               <p style={style.city}>{brewery.city}</p>
-              {/*<p style={style.other}>
+              <p style={style.other}>
                 <span style={style.style}>{brew.style}</span>
                 <span style={style.abv}>{brew.abv} ABV</span>
-              </p>*/}
+              </p>
               <hr style={style.rule} />
               <p style={style.notes}>{note.text}</p>
               <Rating liked={note.liked} style={style.rating} />
