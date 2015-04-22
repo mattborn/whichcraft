@@ -83,7 +83,8 @@
             page: 'brews',
             popover: 'add',
             user: null,
-            notes: []
+            notes: [],
+            currentNote: 0
           };
         },
         componentWillMount: function() {
@@ -124,6 +125,11 @@
           this.setState({menuOpen: !this.state.menuOpen});
           e.preventDefault();
         },
+        _setCurrentNote: function(note, e) {
+          this.setState({currentNote: note});
+          this._openPopover('brew', e);
+          e.preventDefault();
+        },
         render: function () {
           var style = {
             app: {
@@ -151,7 +157,7 @@
           };
           var popovers = {
             add: <BrewForm app={this} user={this.state.uid} />,
-            brew: <Brew brew={testData.users[0].notes[1]} />,
+            brew: <Brew app={this} note={this.state.notes[this.state.currentNote]} />,
             confirm: <Confirm />
           };
           var user = this.state.user;
@@ -362,8 +368,14 @@
           var notes = this.props.notes;
           return (
             <div style={style.brews}>
-              {notes.length ? _.map(notes, function (note) {
-                  return <BrewItem note={note} key={note.brew} />;
+              {notes.length ? _.map(notes, function (note, index) {
+                  return (
+                    <BrewItem
+                      app={app}
+                      index={index}
+                      note={note}
+                      key={note.brew} />
+                    );
                 }
               ) : (
                 <div style={style.empty}>
@@ -427,8 +439,12 @@
           };
           var brew = this.state.brew;
           var brewery = this.state.brewery;
+          var app = this.props.app;
           return (
-              <div style={style.brew}>
+              <div
+                style={style.brew}
+                onClick={app._setCurrentNote.bind(null, this.props.index)}
+                onTouchStart={app._setCurrentNote.bind(null, this.props.index)}>
                 <h1 style={style.name}>{brew.name}</h1>
                 <p style={style.brewery}>{brewery.name} <span style={style.city}>{brewery.city}</span></p>
               </div>
@@ -635,6 +651,33 @@
       });
 
       var Brew = React.createClass({
+        mixins: [ReactFireMixin],
+        getInitialState: function() {
+          return {
+            brew: {
+              name: ''
+            },
+            brewery: {
+              name: '',
+              city: ''
+            }
+          };
+        },
+        componentDidMount: function () {
+          var note = this.props.note;
+          if (note) {
+            this.bindAsObject(firebase.child('brews').child(note.brew), 'brew');
+            this.bindAsObject(firebase.child('breweries').child(note.brewery), 'brewery');
+          }
+        },
+        propTypes: {
+          note: React.PropTypes.shape({
+            brew: React.PropTypes.string.isRequired,
+            brewery: React.PropTypes.string.isRequired,
+            text: React.PropTypes.string,
+            liked: React.PropTypes.bool
+          })
+        },
         render: function () {
           var style = {
             wrap: {
@@ -671,19 +714,21 @@
             },
             rating: { margin: '0 0 20px' }
           };
-          var brew = this.props.note;
+          var brew = this.state.brew;
+          var brewery = this.state.brewery;
+          var note = this.props.note;
           return (
             <div style={style.wrap}>
               <h1 style={style.name}>{brew.name}</h1>
-              <p style={style.brewery}>{brew.brewery}</p>
-              <p style={style.city}>{brew.city}</p>
-              <p style={style.other}>
+              <p style={style.brewery}>{brewery.name}</p>
+              <p style={style.city}>{brewery.city}</p>
+              {/*<p style={style.other}>
                 <span style={style.style}>{brew.style}</span>
                 <span style={style.abv}>{brew.abv} ABV</span>
-              </p>
+              </p>*/}
               <hr style={style.rule} />
-              <p style={style.notes}>{brew.notes}</p>
-              <Rating liked={brew.liked} style={style.rating} />
+              <p style={style.notes}>{note.text}</p>
+              <Rating liked={note.liked} style={style.rating} />
               <Button text='Edit' treatment='tiny' />
             </div>
           );
