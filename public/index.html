@@ -754,6 +754,7 @@
           var brew = this.state.brew;
           var brewery = this.state.brewery;
           var note = this.props.note;
+          var app = this.props.app;
           return (
             <div style={style.wrap}>
               <h1 style={style.name}>{brew.name}</h1>
@@ -767,6 +768,10 @@
               <p style={style.notes}>{note.text}</p>
               <Rating liked={note.liked} style={style.rating} />
               <Button text='Edit' treatment='tiny' />
+              <Button
+                onClick={app._closePopover}
+                onTouchStart={app._closePopover}
+                text='Back to brews' />
             </div>
           );
         }
