@@ -126,7 +126,10 @@
           e.preventDefault();
         },
         _closePopover: function (e) {
-          this.setState({popoverOpen: false});
+          this.setState({
+            popover: null,
+            popoverOpen: false
+          });
           e.preventDefault();
         },
         _toggleMenu: function (e) {
