@@ -15,3 +15,5 @@ Current **master** branch is derived from the evolution of the following orphan 
 ## Local webserver
 
 Run `npm install && node server.js` to serve the app at [localhost:1996](http://localhost:1996).
+
+Use `jsx --extension jsx --watch . public` (requires [react-tools](https://npmjs.com/package/react-tools))
