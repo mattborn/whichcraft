@@ -132,7 +132,7 @@ var App = React.createClass({
       brews: <Brews app={this} notes={this.state.notes} />,
       breweries: <Breweries />,
       feedback: <Feedback />,
-      account: <Account user={testData.users[0]} />,
+      account: <Account app={this} user={testData.users[0]} />,
       status: <Status />
     };
     var popovers = {
@@ -231,9 +231,7 @@ var Login = React.createClass({
     return (
       <div style={style.login}>
         <div style={style.head}>
-          <svg style={style.logomark} viewBox='0 0 100 96'>
-            <path d='M86,2h1c0.6,0,1-0.4,1-1s-0.4-1-1-1H11c-0.6,0-1,0.4-1,1s0.4,1,1,1h1C12,2,0,34,0,50c0,30,22.4,46,50,46s50-16,50-46C100,34,86,2,86,2z'/>
-          </svg>
+          <Logomark style={style.logomark} />
           <Logotype style={style.logotype} />
         </div>
         <form onSubmit={this._submit}>
@@ -274,6 +272,16 @@ var Loading = React.createClass({
       <Center>
         <img src="ball-triangle.svg" style={style} />
       </Center>
+    );
+  }
+});
+
+var Logomark = React.createClass({
+  render: function () {
+    return (
+      <svg style={this.props.style} viewBox='0 0 100 96'>
+        <path d='M86,2h1c0.6,0,1-0.4,1-1s-0.4-1-1-1H11c-0.6,0-1,0.4-1,1s0.4,1,1,1h1C12,2,0,34,0,50c0,30,22.4,46,50,46s50-16,50-46C100,34,86,2,86,2z'/>
+      </svg>
     );
   }
 });
@@ -539,6 +547,15 @@ var AddButton = React.createClass({
 });
 
 var BrewForm = React.createClass({
+  getInitialState: function() {
+    return {
+      validated: false,
+      liked: null
+    };
+  },
+  componentDidMount: function() {
+    this._validate();
+  },
   createBrewery: function(name) {
     var self = this;
     // Add Brewery
@@ -623,38 +640,111 @@ var BrewForm = React.createClass({
     this.addBrewToUser(brewId);
     this.addBreweryToUser(breweryId);
   },
+  _validate: function () {
+    var name = this.refs.name.getDOMNode().value;
+    var brewery = this.refs.brewery.getDOMNode().value;
+    if (name && brewery) {
+      this.setState({validated: true});
+    } else {
+      this.setState({validated: false});
+    }
+    this.setState({error: false});
+  },
+  _yep: function () {
+    if (this.state.liked) this.setState({liked: null});
+    else this.setState({liked: true});
+  },
+  _nope: function () {
+    var liked = this.state.liked;
+    if (liked !== null && !liked) this.setState({liked: null});
+    else this.setState({liked: false});
+  },
   render: function () {
+    var liked = this.state.liked;
+    var isNotLiked = liked !== null && !liked;
     var style = {
-      form: {
-        padding: 30
+      form: { padding: 30 },
+      logomark: {
+        width: 40,
+        height: 40,
+        display: 'block',
+        margin: '0 auto 10px'
       },
-      notes: { height: 100 }
+      title: {
+        fontSize: Type.large,
+        margin: '0 0 10px'
+      },
+      notes: { height: 100 },
+      rating: { margin: '0 0 20px' },
+      rating_text: {
+        fontWeight: 600,
+        margin: '0 20px 0 0'
+      },
+      yep: {
+        background: liked ? Colors.dark : null,
+        border: '1px solid '+ Colors.dark,
+        borderTopLeftRadius: 4,
+        borderBottomLeftRadius: 4,
+        color: liked ? Colors.white : null,
+        fontWeight: 600,
+        padding: '5px 15px'
+      },
+      nope: {
+        background: isNotLiked ? Colors.dark : null,
+        borderColor: Colors.dark,
+        borderStyle: 'solid',
+        borderWidth: '1px 1px 1px 0',
+        borderTopRightRadius: 4,
+        borderBottomRightRadius: 4,
+        color: isNotLiked ? Colors.white : null,
+        fontWeight: 600,
+        padding: '5px 15px'
+      },
+      save: {
+        width: '100%',
+        margin: '0 0 10px'
+      }
     };
     var app = this.props.app;
     return (
       <form style={style.form} onSubmit={this.createNote}>
-        {this.props.note ? 'Edit brew' : 'Add brew'}
+        <Logomark style={style.logomark} />
+        <h1 style={style.title}>{this.props.note ? 'Edit brew' : 'Add brew'}</h1>
         <Label htmlFor='brewName' text='Brew name' />
         <Input
           id='brewName'
+          onChange={this._validate}
           placeholder='Zombie Dust'
           ref='name' />
         <Label htmlFor='breweryName' text='Brewery name' />
-        <Input id='breweryName'
+        <Input
+          id='breweryName'
+          onChange={this._validate}
           placeholder='3 Floyds Brewing Co.'
           ref='brewery' />
         <Label htmlFor='notes' text='Notes' />
         <Textarea id='notes' ref='text' placeholder='Optional' style={style.notes} />
-        <p>{'Would drink again? Yep Nope'}</p>
+        <p style={style.rating}>
+          <span style={style.rating_text}>Would drink again?</span>
+          <button
+            onClick={this._yep}
+            style={style.yep}
+            type="button">Yep</button>
+          <button
+            onClick={this._nope}
+            style={style.nope}
+            type="button">Nope</button>
+        </p>
         <Button
-          // disabled='true'
+          disabled={!this.state.validated}
+          style={style.save}
           type='submit'
           text='Save brew' />
         <Button
           onClick={app._closePopover}
           onTouchStart={app._closePopover}
           text='Cancel'
-          treatment='tiny' />
+          treatment='cancel' />
       </form>
     );
   }
@@ -693,7 +783,13 @@ var Brew = React.createClass({
   render: function () {
     var style = {
       wrap: {
-        padding: '100px 50px 0'
+        padding: '50px 50px 0'
+      },
+      logomark: {
+        width: 40,
+        height: 40,
+        display: 'block',
+        margin: '0 auto 40px'
       },
       name: {
         fontSize: 30,
@@ -712,7 +808,7 @@ var Brew = React.createClass({
       },
       other: { margin: '0 0 20px' },
       style: { margin: '0 20px 0 0' },
-      abv: {},
+      abv: { fontSize: Type.small },
       rule: {
         width: 40,
         height: 1,
@@ -732,12 +828,13 @@ var Brew = React.createClass({
     var app = this.props.app;
     return (
       <div style={style.wrap}>
+        <Logomark style={style.logomark} />
         <h1 style={style.name}>{brew.name}</h1>
         <p style={style.brewery}>{brewery.name}</p>
         <p style={style.city}>{brewery.city}</p>
         <p style={style.other}>
           <span style={style.style}>{brew.style}</span>
-          <span style={style.abv}>{brew.abv ? brew.abv + ' ABV' : ''}</span>
+          {brew.abv && <span>{brew.abv}% <span style={style.abv}>ABV</span></span>}
         </p>
         <hr style={style.rule} />
         <p style={style.notes}>{note.text}</p>
@@ -746,7 +843,8 @@ var Brew = React.createClass({
         <Button
           onClick={app._closePopover}
           onTouchStart={app._closePopover}
-          text='Back to brews' />
+          text='Back to brews'
+          treatment='cancel' />
       </div>
     );
   }
@@ -828,6 +926,7 @@ var Feedback = React.createClass({
 
 var Account = React.createClass({
   _logout: function () {
+    this.props.app.setState({page: 'brews'});
     firebase.unauth();
   },
   render: function () {
@@ -922,7 +1021,16 @@ var Button = React.createClass({
       lineHeight: '18px',
       padding: '11px 20px'
     };
+    var tiny = {
+        width: '100%',
+        fontSize: Type.small,
+        fontWeight: 600,
+        letterSpacing: '.1em',
+        padding: '13px',
+        textTransform: 'uppercase'
+    };
     var treatments = {
+      cancel: _.extend(_.clone(tiny), {color: Colors.light}),
       menu: {
         width: '100%',
         fontSize: Type.large,
@@ -947,15 +1055,7 @@ var Button = React.createClass({
         padding: '14px',
         textTransform: 'uppercase'
       },
-      tiny: {
-        width: '100%',
-        color: Colors.dark,
-        fontSize: Type.small,
-        fontWeight: 600,
-        letterSpacing: '.1em',
-        padding: '13px',
-        textTransform: 'uppercase'
-      }
+      tiny: _.extend(tiny, {color: Colors.dark})
     };
     if (treatment) { _.extend(style, treatments[treatment]); }
     if (disabled) { _.extend(style, {background: Colors.light}); }
