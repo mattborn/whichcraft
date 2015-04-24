@@ -128,6 +128,7 @@ var App = React.createClass({
         transform: 'translateZ(0)'
       }
     };
+    _.extend(style.popover, scrollStyles);
     var pages = {
       brews: <Brews app={this} notes={this.state.notes} />,
       breweries: <Breweries />,
@@ -651,10 +652,12 @@ var BrewForm = React.createClass({
     this.setState({error: false});
   },
   _yep: function () {
+    // TODO: wire up to Firebase
     if (this.state.liked) this.setState({liked: null});
     else this.setState({liked: true});
   },
   _nope: function () {
+    // TODO: wire up to Firebase
     var liked = this.state.liked;
     if (liked !== null && !liked) this.setState({liked: null});
     else this.setState({liked: false});
@@ -675,10 +678,13 @@ var BrewForm = React.createClass({
         margin: '0 0 10px'
       },
       notes: { height: 100 },
-      rating: { margin: '0 0 20px' },
+      rating: {
+        margin: '0 0 20px',
+        whiteSpace: 'nowrap'
+      },
       rating_text: {
         fontWeight: 600,
-        margin: '0 20px 0 0'
+        margin: '0 15px 0 0'
       },
       yep: {
         background: liked ? Colors.dark : null,
@@ -687,7 +693,7 @@ var BrewForm = React.createClass({
         borderBottomLeftRadius: 4,
         color: liked ? Colors.white : null,
         fontWeight: 600,
-        padding: '5px 15px'
+        padding: '5px 10px'
       },
       nope: {
         background: isNotLiked ? Colors.dark : null,
@@ -698,7 +704,7 @@ var BrewForm = React.createClass({
         borderBottomRightRadius: 4,
         color: isNotLiked ? Colors.white : null,
         fontWeight: 600,
-        padding: '5px 15px'
+        padding: '5px 10px'
       },
       save: {
         width: '100%',
