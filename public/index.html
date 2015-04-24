@@ -145,6 +145,8 @@
           var style = {
             app: {
               height: '100%',
+              width: '100%',
+              position: 'absolute',
               overflow: 'hidden',
               padding: '81px 0 0'
             },
@@ -442,10 +444,12 @@
             },
             name: {
               fontSize: 16,
-              lineHeight: '20px'
+              lineHeight: '20px',
+              pointerEvents: 'none'
             },
             brewery: {
-              fontSize: 14
+              fontSize: 14,
+              pointerEvents: 'none'
             },
             city: {
               color: Colors.light

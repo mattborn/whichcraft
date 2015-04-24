@@ -85,7 +85,7 @@ html {
   -webkit-text-size-adjust: none;
   text-align: center;
 }
-body { height: 100%; overflow: hidden; }
+body { height: 100%; }
 
 .flex-center {
   height: 100%;
