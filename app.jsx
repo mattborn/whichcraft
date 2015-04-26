@@ -12,6 +12,7 @@ var Colors = {
   error: '#d44'
 };
 var scrollStyles = {
+  height: '100%',
   WebkitOverflowScrolling: 'touch',
   overflowX: 'hidden',
   overflowY: 'auto'
@@ -81,9 +82,9 @@ var App = React.createClass({
   componentWillUnmount: function() {
     key.unbind('esc', this._closePopover);
   },
-  _openPage: function (page, e) {
+  openPage: function (page, toggleMenu, e) {
     this.setState({page: page});
-    this._toggleMenu(e);
+    if (toggleMenu) this._toggleMenu(e);
   },
   _openPopover: function (popover, e) {
     this.setState({
@@ -109,6 +110,7 @@ var App = React.createClass({
     e.preventDefault();
   },
   render: function () {
+    console.log('App:render', this.state);
     var style = {
       app: {
         height: '100%',
@@ -119,7 +121,6 @@ var App = React.createClass({
       },
       popover: {
         width: '100%',
-        height: '100%',
         background: Colors.white,
         position: 'absolute',
         top: 0,
@@ -129,11 +130,13 @@ var App = React.createClass({
       }
     };
     _.extend(style.popover, scrollStyles);
+    var user = this.state.user;
     var pages = {
       brews: <Brews app={this} notes={this.state.notes} />,
       breweries: <Breweries />,
       feedback: <Feedback />,
-      account: <Account app={this} user={testData.users[0]} />,
+      account: <Account app={this} user={user} />,
+      upgrade: <Upgrade app={this} />,
       status: <Status />
     };
     var popovers = {
@@ -141,7 +144,6 @@ var App = React.createClass({
       brew: <Brew app={this} note={this.state.notes[this.state.currentNote]} />,
       confirm: <Confirm />
     };
-    var user = this.state.user;
     if (user === null) {
       return <Loading />;
     } else {
@@ -339,10 +341,7 @@ var Brews = React.createClass({
   },
   render: function () {
     var style = {
-      brews: {
-        height: '100%',
-        padding: '15px 0'
-      },
+      brews: { padding: '15px 0' },
       empty: { padding: '145px 0 0' },
       empty_title: {
         fontSize: Type.large,
@@ -475,28 +474,28 @@ var Menu = React.createClass({
       <div style={style.menu}>
         <Center column='true'>
           <Button
-            onClick={app._openPage.bind(null, 'brews')}
-            onTouchStart={app._openPage.bind(null, 'brews')}
+            onClick={app.openPage.bind(null, 'brews', true)}
+            onTouchStart={app.openPage.bind(null, 'brews', true)}
             text='Brews'
             treatment='menu' />
           <Button
-            onClick={app._openPage.bind(null, 'breweries')}
-            onTouchStart={app._openPage.bind(null, 'breweries')}
+            onClick={app.openPage.bind(null, 'breweries', true)}
+            onTouchStart={app.openPage.bind(null, 'breweries', true)}
             text='Breweries'
             treatment='menu' />
           <Button
-            onClick={app._openPage.bind(null, 'account')}
-            onTouchStart={app._openPage.bind(null, 'account')}
+            onClick={app.openPage.bind(null, 'account', true)}
+            onTouchStart={app.openPage.bind(null, 'account', true)}
             text='Account'
             treatment='menu' />
           <Button
-            onClick={app._openPage.bind(null, 'feedback')}
-            onTouchStart={app._openPage.bind(null, 'feedback')}
+            onClick={app.openPage.bind(null, 'feedback', true)}
+            onTouchStart={app.openPage.bind(null, 'feedback', true)}
             text='Feedback'
             treatment='menu' />
           <Button
-            onClick={app._openPage.bind(null, 'status')}
-            onTouchStart={app._openPage.bind(null, 'status')}
+            onClick={app.openPage.bind(null, 'status', true)}
+            onTouchStart={app.openPage.bind(null, 'status', true)}
             text='Status'
             treatment='menu' />
         </Center>
@@ -937,50 +936,135 @@ var Account = React.createClass({
   },
   render: function () {
     var style = {
-      account: {
-        maxWidth: 375,
-        margin: '0 auto',
-        padding: 30
-      },
+      account: { padding: 30 },
       image: {
         width: 100,
         height: 100,
         borderRadius: '50%',
         margin: '0 0 20px'
       },
-      name: { fontSize: Type.large },
-      email: { fontSize: Type.medium },
-      since: { color: Colors.light },
-      brews: {},
-      brews_label: {},
-      from: {},
-      breweries: {},
-      breweries_label: {},
-      upgrade: {},
+      name: {
+        fontSize: Type.large,
+        margin: '0 0 5px'
+      },
+      email: {
+        fontSize: Type.medium,
+        margin: '0 0 5px'
+      },
+      since: {
+        color: Colors.light,
+        margin: '0 0 30px'
+      },
+      metrics: { margin: '0 0 40px' },
+      brews: {
+        width: 'calc(50% - 30px)',
+        float: 'left',
+        textAlign: 'right'
+      },
+      metric: {
+        display: 'block',
+        fontFamily: 'proxima-nova, sans-serif',
+        fontSize: 60
+      },
+      label: {
+        letterSpacing: '.1em',
+        textTransform: 'uppercase'
+      },
+      from: {
+        width: 60,
+        color: Colors.light,
+        float: 'left',
+        padding: '30px 0 0'
+      },
+      breweries: {
+        width: 'calc(50% - 30px)',
+        float: 'left',
+        textAlign: 'left'
+      },
+      upgrade: { margin: '0 0 20px' },
       signout: {}
     };
+    _.extend(style.account, scrollStyles);
+    var app = this.props.app;
     var user = this.props.user;
     return (
-      <Center>
-        <div style={style.account}>
-          <img alt='' src={'http://gravatar.com/avatar/'+ user.hash +'?s=200'} style={style.image} />
-          <h1 style={style.name}>{user.name}</h1>
-          <p style={style.email}>{user.email}</p>
-          <p style={style.since}>Since {user.joined}</p>
-          <span style={style.brews}>{user.notes.length}</span>
-          <span style={style.brews_label}>brews</span>
-          <span style={style.from}>from</span>
-          <span style={style.breweries}>{Math.ceil(user.notes.length * .8)}</span>
-          <span style={style.breweries_label}>breweries</span>
-          <Button style={style.upgrade} text='Upgrade to pro' />
-          <Button
-            onClick={this._logout}
-            onTouchStart={this._logout}
-            style={style.signout}
-            text='Sign out'
-            treatment='tiny' />
+      <div style={style.account}>
+        <img src={'http://gravatar.com/avatar/'+ user.gravatar +'?s=200'} style={style.image} />
+        <h1 style={style.name}>{user.name}</h1>
+        <p style={style.email}>{user.email}</p>
+        <p style={style.since}>Since {moment(user.joined).format('MMMM YYYY')}</p>
+        <div style={style.metrics}>
+          <div style={style.brews}>
+            <span style={style.metric}>{Object.keys(user.notes).length}</span>
+            <span style={style.label}>brews</span>
+          </div>
+          <div style={style.from}>from</div>
+          <div style={style.breweries}>
+            <span style={style.metric}>{'--' || Object.keys(user.breweries).length}</span>
+            <span style={style.label}>breweries</span>
+          </div>
+          <div style={{clear:'both'}} />
         </div>
-      </Center>
+        <Button
+          onClick={app.openPage.bind(null, 'upgrade', false)}
+          onTouchStart={app.openPage.bind(null, 'upgrade', false)}
+          style={style.upgrade}
+          text='Upgrade to PRO'
+          treatment='primary' />
+        <Button
+          onClick={this._logout}
+          onTouchStart={this._logout}
+          style={style.signout}
+          text='Sign out'
+          treatment='cancel' />
+      </div>
+    );
+  }
+});
+
+var Upgrade = React.createClass({
+  _flagAccount: function () {
+    console.log('TODO: add upgrade flag to database for this account');
+  },
+  render: function () {
+    var style = {
+      upgrade: {
+        maxWidth: 375,
+        margin: '0 auto',
+        padding: 50
+      },
+      title: {
+        fontSize: Type.large,
+        margin: '0 0 5px'
+      },
+      price: {
+        fontSize: Type.large,
+        margin: '0 0 20px'
+      },
+      text: {
+        lineHeight: 1.3,
+        margin: '0 0 30px'
+      },
+      primary: { margin: '0 0 20px' }
+    };
+    var app = this.props.app;
+    return (
+      <div style={style.upgrade}>
+        <h1 style={style.title}>PRO</h1>
+        <p style={style.price}>$50 / year</p>
+        <p style={style.text}>For now, WhichCraft is a beer-centric, glorified notepad. We want to keep the base app simple, but we know some users will want to do more. Before we dive in, we’re gauging how many of you want us to invest more time into building more features. Click below if this sounds like something you want.</p>
+      <Button
+        onClick={this._flagAccount}
+        onTouchStart={this._flagAccount}
+        style={style.primary}
+        text='Yeah, I’m interested'
+        treatment='primary' />
+      <Button
+        onClick={app.openPage.bind(null, 'account', false)}
+        onTouchStart={app.openPage.bind(null, 'account', false)}
+        text='Nevermind'
+        treatment='cancel' />
+      </div>
     );
   }
 });
