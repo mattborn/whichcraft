@@ -584,8 +584,7 @@ var BrewForm = React.createClass({
     var name = this.refs.name.getDOMNode().value;
     var brewery = this.refs.brewery.getDOMNode().value;
     var text = this.refs.text.getDOMNode().value;
-    var liked = true;
-    // var liked = this.refs.liked.getDOMNode().value === 'true' ? true : false;
+    var liked = this.state.liked;
 
     // TODO: Provide some basic validation before closing popover
     this.props.app._closePopover(e);
@@ -615,11 +614,13 @@ var BrewForm = React.createClass({
       },
       success: function (data) {
         // Yucky hardcoded bullshit
-        data = data['data'][0];
-        firebase.child('brews').child(brewId).update({
-          abv: data['abv'],
-          style: data['style']['name']
-        });
+        if (data['data']) data = data['data'][0];
+        if (data) {
+          firebase.child('brews').child(brewId).update({
+            abv: data['abv'] ? data['abv'] : '',
+            style: data['style'] ? data['style']['name'] : ''
+          });
+        }
       },
       error: function (xhr, status) {
         console.log(status);
@@ -631,9 +632,14 @@ var BrewForm = React.createClass({
     firebase.child('users').child(this.props.user).child('notes').child(noteId).set({
       brew: brewId,
       brewery: breweryId,
-      text: text,
-      liked: liked
+      text: text
     });
+
+    if (liked != null) {
+      firebase.child('users').child(this.props.user).child('notes').child(noteId).set({
+        liked: liked
+      });
+    }
 
     // Add brew to brewery and both to current user
     this.addBrewToBrewery(breweryId, brewId);
@@ -843,7 +849,7 @@ var Brew = React.createClass({
         </p>
         <hr style={style.rule} />
         <p style={style.notes}>{note.text}</p>
-        <Rating liked={note.liked} style={style.rating} />
+        {typeof note.liked != 'undefined' && <Rating liked={note.liked} style={style.rating} />}
         <Button text='Edit' treatment='tiny' />
         <Button
           onClick={app._closePopover}
