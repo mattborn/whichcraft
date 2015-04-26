@@ -141,6 +141,7 @@ var App = React.createClass({
     };
     var popovers = {
       add: <BrewForm app={this} user={this.state.uid} />,
+      edit: <BrewForm app={this} user={this.state.uid} note={this.state.notes[this.state.currentNote]} noteId={this.state.user ? Object.keys(this.state.user.notes)[this.state.currentNote] : null} />,
       brew: <Brew app={this} note={this.state.notes[this.state.currentNote]} />,
       confirm: <Confirm />
     };
@@ -547,14 +548,36 @@ var AddButton = React.createClass({
 });
 
 var BrewForm = React.createClass({
+  mixins: [ReactFireMixin],
   getInitialState: function() {
     return {
+      brew: '',
+      brewery: '',
       validated: false,
       liked: null
     };
   },
+  getDefaultProps: function() {
+    return {
+      note: null
+    };
+  },
+  componentDidUpdate: function(prevProps, prevState) {
+    if (prevState.brew.name != this.state.brew.name) {
+      this.refs.name.getDOMNode().value = this.state.brew.name;
+    }
+    if (prevState.brewery.name != this.state.brewery.name) {
+      this.refs.brewery.getDOMNode().value = this.state.brewery.name;
+    }
+  },
   componentDidMount: function() {
+    var note = this.props.note;
     this._validate();
+    if (note) {
+      this.bindAsObject(firebase.child('brews').child(note.brew), 'brew');
+      this.bindAsObject(firebase.child('breweries').child(note.brewery), 'brewery');
+      if (typeof note.liked != 'undefined') this.setState({liked: note.liked});
+    }
   },
   createBrewery: function(name) {
     var self = this;
@@ -636,7 +659,7 @@ var BrewForm = React.createClass({
     });
 
     if (liked != null) {
-      firebase.child('users').child(this.props.user).child('notes').child(noteId).set({
+      firebase.child('users').child(this.props.user).child('notes').child(noteId).update({
         liked: liked
       });
     }
@@ -645,6 +668,56 @@ var BrewForm = React.createClass({
     this.addBrewToBrewery(breweryId, brewId);
     this.addBrewToUser(brewId);
     this.addBreweryToUser(breweryId);
+  },
+  updateNote: function(e) {
+    e.preventDefault();
+    var self = this;
+    var name = this.refs.name.getDOMNode().value;
+    var brewery = this.refs.brewery.getDOMNode().value;
+    var text = this.refs.text.getDOMNode().value;
+    var liked = this.state.liked;
+
+    this.props.app._closePopover(e);
+
+    firebase.child('brews').child(this.props.note.brew).update({
+      name: name
+    });
+
+    firebase.child('breweries').child(this.props.note.brewery).update({
+      name: brewery
+    });
+
+    $.ajax({
+      url:"https://www.kimonolabs.com/api/ondemand/cmagu84i?apikey=EgIYTM8HavTvDWxbAro1VOHSEB4fsRAP&kimmodify=1",
+      crossDomain: true,
+      dataType: "jsonp",
+      data: {
+        q: name + " " + brewery
+      },
+      success: function (data) {
+        // Yucky hardcoded bullshit
+        if (data['data']) data = data['data'][0];
+        if (data) {
+          firebase.child('brews').child(self.props.note.brew).update({
+            abv: data['abv'] ? data['abv'] : '',
+            style: data['style'] ? data['style']['name'] : ''
+          });
+        }
+      },
+      error: function (xhr, status) {
+        console.log(status);
+      }
+    });
+
+    firebase.child('users').child(this.props.user).child('notes').child(this.props.noteId).update({
+      text: text
+    });
+
+    if (liked != null) {
+      firebase.child('users').child(this.props.user).child('notes').child(this.props.noteId).update({
+        liked: liked
+      });
+    }
   },
   _validate: function () {
     var name = this.refs.name.getDOMNode().value;
@@ -657,12 +730,10 @@ var BrewForm = React.createClass({
     this.setState({error: false});
   },
   _yep: function () {
-    // TODO: wire up to Firebase
     if (this.state.liked) this.setState({liked: null});
     else this.setState({liked: true});
   },
   _nope: function () {
-    // TODO: wire up to Firebase
     var liked = this.state.liked;
     if (liked !== null && !liked) this.setState({liked: null});
     else this.setState({liked: false});
@@ -718,7 +789,7 @@ var BrewForm = React.createClass({
     };
     var app = this.props.app;
     return (
-      <form style={style.form} onSubmit={this.createNote}>
+      <form style={style.form} onSubmit={this.props.note ? this.updateNote : this.createNote}>
         <Logomark style={style.logomark} />
         <h1 style={style.title}>{this.props.note ? 'Edit brew' : 'Add brew'}</h1>
         <Label htmlFor='brewName' text='Brew name' />
@@ -726,15 +797,22 @@ var BrewForm = React.createClass({
           id='brewName'
           onChange={this._validate}
           placeholder='Zombie Dust'
+          defaultValue={this.state.brew.name}
           ref='name' />
         <Label htmlFor='breweryName' text='Brewery name' />
         <Input
           id='breweryName'
           onChange={this._validate}
           placeholder='3 Floyds Brewing Co.'
+          defaultValue={this.state.brewery.name}
           ref='brewery' />
         <Label htmlFor='notes' text='Notes' />
-        <Textarea id='notes' ref='text' placeholder='Optional' style={style.notes} />
+        <Textarea
+          id='notes'
+          ref='text'
+          placeholder='Optional'
+          style={style.notes}
+          defaultValue={this.props.note ? this.props.note.text : ''} />
         <p style={style.rating}>
           <span style={style.rating_text}>Would drink again?</span>
           <button
@@ -850,7 +928,10 @@ var Brew = React.createClass({
         <hr style={style.rule} />
         <p style={style.notes}>{note.text}</p>
         {typeof note.liked != 'undefined' && <Rating liked={note.liked} style={style.rating} />}
-        <Button text='Edit' treatment='tiny' />
+        <Button
+          text='Edit'
+          treatment='tiny'
+          onClick={app._openPopover.bind(null, 'edit')} />
         <Button
           onClick={app._closePopover}
           onTouchStart={app._closePopover}
@@ -1235,6 +1316,7 @@ var Input = React.createClass({
       onChange={this.props.onChange}
       onFocus={this._focus}
       onBlur={this._blur}
+      defaultValue={this.props.defaultValue}
       placeholder={this.props.placeholder}
       style={_.extend(style, this.props.style)}
       type={this.props.type} />;
@@ -1260,6 +1342,7 @@ var Textarea = React.createClass({
       id={this.props.id}
       onFocus={this._focus}
       onBlur={this._blur}
+      defaultValue={this.props.defaultValue}
       placeholder={this.props.placeholder}
       style={_.extend(style, this.props.style)} />;
   }
