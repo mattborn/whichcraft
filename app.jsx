@@ -1183,7 +1183,7 @@ var Status = React.createClass({
       status: {
         maxWidth: 375,
         margin: '0 auto',
-        padding: '30px 0 0'
+        padding: '30px 0'
       },
       title: {
         fontSize: Type.large,
@@ -1201,7 +1201,7 @@ var Status = React.createClass({
         borderColor: Colors.dark,
         borderStyle: 'solid',
         float: 'left',
-        padding: 25
+        padding: '25px 0'
       },
       first: { borderWidth: '0 1px 1px 0' },
       second: { borderWidth: '0 0 1px 0' },
