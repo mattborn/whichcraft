@@ -11,6 +11,10 @@ var Colors = {
   dark: '#444',
   error: '#d44'
 };
+var maxLandscape = {
+  maxWidth: 736,
+  margin: '0 auto'
+};
 var scrollStyles = {
   height: '100%',
   WebkitOverflowScrolling: 'touch',
@@ -987,12 +991,12 @@ var Confirm = React.createClass({
 var Breweries = React.createClass({
   render: function () {
     var style = {
-      maxWidth: 375,
-      margin: '0 auto'
+      breweries: {}
     };
+    _.extend(style.breweries, maxLandscape);
     return (
       <Center>
-        <div style={style}>
+        <div style={style.breweries}>
           Breweries
         </div>
       </Center>
@@ -1003,12 +1007,12 @@ var Breweries = React.createClass({
 var Feedback = React.createClass({
   render: function () {
     var style = {
-      maxWidth: 375,
-      margin: '0 auto'
+      feedback: {}
     };
+    _.extend(style.feedback, maxLandscape);
     return (
       <Center>
-        <div style={style}>
+        <div style={style.feedback}>
           Feedback
         </div>
       </Center>
@@ -1115,11 +1119,7 @@ var Upgrade = React.createClass({
   },
   render: function () {
     var style = {
-      upgrade: {
-        maxWidth: 375,
-        margin: '0 auto',
-        padding: 50
-      },
+      upgrade: { padding: 50 },
       title: {
         fontSize: Type.large,
         margin: '0 0 5px'
@@ -1134,6 +1134,7 @@ var Upgrade = React.createClass({
       },
       primary: { margin: '0 0 20px' }
     };
+    _.extend(style.upgrade, maxLandscape);
     var app = this.props.app;
     return (
       <div style={style.upgrade}>
@@ -1180,11 +1181,7 @@ var Status = React.createClass({
   },
   render: function () {
     var style = {
-      status: {
-        maxWidth: 375,
-        margin: '0 auto',
-        padding: '30px 0'
-      },
+      status: { padding: '30px 0' },
       title: {
         fontSize: Type.large,
         margin: '0 0 20px'
@@ -1222,7 +1219,7 @@ var Status = React.createClass({
       },
       heading: { fontSize: Type.medium }
     };
-    _.extend(style.status, scrollStyles);
+    _.extend(style.status, maxLandscape, scrollStyles);
     return (
       <div style={style.status}>
         <h1 style={style.title}>Status</h1>
