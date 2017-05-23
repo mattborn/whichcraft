@@ -17,44 +17,64 @@ class BrewForm extends React.Component {
     static displayName = 'BrewForm';
 
     static defaultProps = {
+        brew: '',
+        brewery: '',
         note: null
     };
 
     state = {
-        brew: '',
-        brewery: '',
         validated: false,
-        liked: null
+        liked: this.props.note ? this.props.note.liked : null
     };
 
-    componentDidUpdate(prevProps, prevState) {
-        if (prevState.brew.name != this.state.brew.name) {
-            this._name.value = this.state.brew.name;
-        }
-        if (prevState.brewery.name != this.state.brewery.name) {
-            this._brewery.value = this.state.brewery.name;
-        }
-    }
-
     componentDidMount() {
-        const note = this.props.note;
         this._validate();
-        if (note) {
-            this.bindAsObject(firebase.database().ref('brews').child(note.brew), 'brew');
-            this.bindAsObject(firebase.database().ref('breweries').child(note.brewery), 'brewery');
-            if (typeof note.liked != 'undefined') this.setState({ liked: note.liked });
-        }
     }
 
     createBrewery = name => {
-        // Add Brewery
-        const breweryRef = firebase.database().ref('breweries').push();
-        const breweryId = breweryRef.key();
-        firebase.database().ref('breweries').child(breweryId).set({
-            // city: city,
-            name: name
+        return new Promise(resolve => {
+            // Find matching breweries first.
+            const ref = firebase.database().ref('breweries');
+            ref.orderByChild('name').equalTo(name).limitToFirst(1).once('value', snapshot => {
+                if (snapshot.numChildren()) {
+                    const data = snapshot.val();
+                    console.log(data);
+                    resolve(Object.keys(data)[0]);
+                } else {
+                    // Add Brewery
+                    const breweryId = ref.push({
+                        // city: city,
+                        name
+                    }).key;
+
+                    resolve(breweryId);
+                }
+            });
         });
-        return breweryId;
+    };
+
+    createBrew = (name, breweryId) => {
+        return new Promise(resolve => {
+            // Create brew
+            // Find matching brews first.
+            const brewRef = firebase.database().ref('brews');
+            brewRef.orderByChild('name').equalTo(name).limitToFirst(1).once('value', snapshot => {
+                if (snapshot.numChildren()) {
+                    const data = snapshot.val();
+                    console.log(data);
+
+                    resolve(Object.keys(data)[0]);
+                } else {
+                    // Add new brew
+                    const brewId = brewRef.push({
+                        name: name,
+                        brewery: breweryId
+                    }).key;
+
+                    resolve(brewId);
+                }
+            });
+        });
     };
 
     addBrewToBrewery = (breweryId, brewId) => {
@@ -82,61 +102,54 @@ class BrewForm extends React.Component {
         this.props.app._closePopover(e);
 
         // Create brewery
-        // TODO: Check if the brewery already exists in Firebase
-        const breweryId = this.createBrewery(brewery);
+        // TODO: Make this async/await
+        this.createBrewery(brewery).then(breweryId => {
+            this.createBrew(name, breweryId).then(brewId => {
+                // Get some brew + brewery data from BreweryDB
+                // TODO: Make sure we match the correct brew
+                // TODO: Provide some error handling, since this is somewhat fragile
+                // $.ajax({
+                //     url: 'https://www.kimonolabs.com/api/ondemand/cmagu84i?apikey=EgIYTM8HavTvDWxbAro1VOHSEB4fsRAP&kimmodify=1',
+                //     crossDomain: true,
+                //     dataType: 'jsonp',
+                //     data: {
+                //         q: name + ' ' + brewery
+                //     },
+                //     success: function(data) {
+                //         // Yucky hardcoded bullshit
+                //         if (data['data']) data = data['data'][0];
+                //         if (data) {
+                //             firebase.database().ref('brews').child(brewId).update({
+                //                 abv: data['abv'] ? data['abv'] : '',
+                //                 style: data['style'] ? data['style']['name'] : ''
+                //             });
+                //         }
+                //     },
+                //     error: function(xhr, status) {
+                //         console.log(status);
+                //     }
+                // });
 
-        // Create brew
-        // TODO: Check if the brew already exists in Firebase
-        const brewRef = firebase.database().ref('brews').push();
-        const brewId = brewRef.key();
-        firebase.database().ref('brews').child(brewId).set({
-            name: name,
-            brewery: breweryId
-        });
+                const noteRef = firebase.database().ref('users').child(this.props.user).child('notes').push();
+                const noteId = noteRef.key;
+                firebase.database().ref('users').child(this.props.user).child('notes').child(noteId).set({
+                    brew: brewId,
+                    brewery: breweryId,
+                    text: text
+                });
 
-        // Get some brew + brewery data from BreweryDB
-        // TODO: Make sure we match the correct brew
-        // TODO: Provide some error handling, since this is somewhat fragile
-        $.ajax({
-            url: 'https://www.kimonolabs.com/api/ondemand/cmagu84i?apikey=EgIYTM8HavTvDWxbAro1VOHSEB4fsRAP&kimmodify=1',
-            crossDomain: true,
-            dataType: 'jsonp',
-            data: {
-                q: name + ' ' + brewery
-            },
-            success: function(data) {
-                // Yucky hardcoded bullshit
-                if (data['data']) data = data['data'][0];
-                if (data) {
-                    firebase.database().ref('brews').child(brewId).update({
-                        abv: data['abv'] ? data['abv'] : '',
-                        style: data['style'] ? data['style']['name'] : ''
+                if (liked != null) {
+                    firebase.database().ref('users').child(this.props.user).child('notes').child(noteId).update({
+                        liked: liked
                     });
                 }
-            },
-            error: function(xhr, status) {
-                console.log(status);
-            }
-        });
 
-        const noteRef = firebase.database().ref('users').child(this.props.user).child('notes').push();
-        const noteId = noteRef.key();
-        firebase.database().ref('users').child(this.props.user).child('notes').child(noteId).set({
-            brew: brewId,
-            brewery: breweryId,
-            text: text
-        });
-
-        if (liked != null) {
-            firebase.database().ref('users').child(this.props.user).child('notes').child(noteId).update({
-                liked: liked
+                // Add brew to brewery and both to current user
+                this.addBrewToBrewery(breweryId, brewId);
+                this.addBrewToUser(brewId);
+                this.addBreweryToUser(breweryId);
             });
-        }
-
-        // Add brew to brewery and both to current user
-        this.addBrewToBrewery(breweryId, brewId);
-        this.addBrewToUser(brewId);
-        this.addBreweryToUser(breweryId);
+        });
     };
 
     updateNote = e => {
@@ -271,7 +284,7 @@ class BrewForm extends React.Component {
                     id="brewName"
                     onChange={this._validate}
                     placeholder="Zombie Dust"
-                    defaultValue={this.state.brew.name}
+                    defaultValue={this.props.brew.name}
                     inputRef={el => (this._name = el)}
                 />
                 <Label htmlFor="breweryName" text="Brewery name" />
@@ -279,7 +292,7 @@ class BrewForm extends React.Component {
                     id="breweryName"
                     onChange={this._validate}
                     placeholder="3 Floyds Brewing Co."
-                    defaultValue={this.state.brewery.name}
+                    defaultValue={this.props.brewery.name}
                     inputRef={el => (this._brewery = el)}
                 />
                 <Label htmlFor="notes" text="Notes" />
