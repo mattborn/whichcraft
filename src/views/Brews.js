@@ -29,11 +29,12 @@ export default class Brews extends React.Component {
         Object.assign(style.brews, scrollStyles);
         var app = this.props.app;
         var notes = this.props.notes;
+
         return (
             <div style={style.brews}>
                 {notes.length
-                    ? notes.map(function(note, index) {
-                        return <BrewItem app={app} index={index} note={note} key={note.brew} />;
+                    ? notes.reverse().map((note, index) => {
+                        return <BrewItem app={app} index={index} note={note} key={note['.key']} />;
                     })
                     : <div style={style.empty}>
                           <h1 style={style.empty_title}>Which craft beers <br />have you had?</h1>
