@@ -14,32 +14,13 @@ class Brew extends React.Component {
     static displayName = 'Brew';
 
     static propTypes = {
+        brew: React.PropTypes.object.isRequired,
+        brewery: React.PropTypes.object.isRequired,
         note: React.PropTypes.shape({
-            brew: React.PropTypes.string.isRequired,
-            brewery: React.PropTypes.string.isRequired,
             text: React.PropTypes.string,
             liked: React.PropTypes.bool
         })
     };
-
-    state = {
-        abv: '',
-        brew: {
-            name: ''
-        },
-        brewery: {
-            name: '',
-            city: ''
-        }
-    };
-
-    componentDidMount() {
-        const note = this.props.note;
-        if (note) {
-            this.bindAsObject(firebase.database().ref('brews').child(note.brew), 'brew');
-            this.bindAsObject(firebase.database().ref('breweries').child(note.brewery), 'brewery');
-        }
-    }
 
     render() {
         const style = {
@@ -83,8 +64,8 @@ class Brew extends React.Component {
             },
             rating: { margin: '0 0 20px' }
         };
-        const brew = this.state.brew;
-        const brewery = this.state.brewery;
+        const brew = this.props.brew;
+        const brewery = this.props.brewery;
         const note = this.props.note;
         const app = this.props.app;
 

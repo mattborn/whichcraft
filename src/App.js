@@ -26,6 +26,8 @@ class App extends React.Component {
     static displayName = 'App';
 
     state = {
+        brew: null,
+        brewery: null,
         menuOpen: false,
         popoverOpen: false,
         page: 'brews',
@@ -36,7 +38,7 @@ class App extends React.Component {
     };
 
     componentWillMount() {
-        var self = this;
+        const self = this;
         firebase.auth().onAuthStateChanged(function(user) {
             if (user) {
                 self.bindAsObject(firebase.database().ref('users').child(user.uid), 'user');
@@ -90,13 +92,20 @@ class App extends React.Component {
 
     _setCurrentNote = (note, e) => {
         this.setState({ currentNote: note });
+
+        this.state.brew && this.unbind('brew');
+        this.state.brewery && this.unbind('brewery');
+
+        this.bindAsObject(firebase.database().ref('brews').child(this.state.notes[note].brew), 'brew');
+        this.bindAsObject(firebase.database().ref('breweries').child(this.state.notes[note].brewery), 'brewery');
+
         this._openPopover('brew', e);
         e.preventDefault();
     };
 
     render() {
         console.log('App:render', this.state);
-        var style = {
+        const style = {
             app: {
                 height: '100%',
                 width: '100%',
@@ -115,8 +124,8 @@ class App extends React.Component {
             }
         };
         Object.assign(style.popover, scrollStyles);
-        var user = this.state.user;
-        var pages = {
+        const user = this.state.user;
+        const pages = {
             brews: <Brews app={this} notes={this.state.notes} />,
             breweries: <Breweries />,
             feedback: <Feedback />,
@@ -124,17 +133,26 @@ class App extends React.Component {
             upgrade: <Upgrade app={this} />,
             status: <Status />
         };
-        var popovers = {
+        const popovers = {
             add: <BrewForm app={this} user={this.state.uid} />,
             edit: (
                 <BrewForm
                     app={this}
+                    brew={this.state.brew}
+                    brewery={this.state.brewery}
                     user={this.state.uid}
                     note={this.state.notes[this.state.currentNote]}
                     noteId={this.state.user ? Object.keys(this.state.user.notes)[this.state.currentNote] : null}
                 />
             ),
-            brew: <Brew app={this} note={this.state.notes[this.state.currentNote]} />,
+            brew: (
+                <Brew
+                    app={this}
+                    brew={this.state.brew}
+                    brewery={this.state.brewery}
+                    note={this.state.notes[this.state.currentNote]}
+                />
+            ),
             confirm: <Confirm />
         };
         if (user === null) {

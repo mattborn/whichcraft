@@ -17,10 +17,14 @@ export default class Login extends React.Component {
         validated: false
     };
 
+    componentDidMount() {
+        this._validate();
+    }
+
     _validate = () => {
-        var email = this._email.value;
-        var password = this._password.value;
-        console.log(email, password);
+        const email = this._email.value;
+        const password = this._password.value;
+
         if (email && password) {
             this.setState({ validated: true });
         } else {
@@ -30,18 +34,19 @@ export default class Login extends React.Component {
     };
 
     _submit = e => {
-        var self = this;
-        var email = this._email.value, password = this._password.value;
+        const email = this._email.value;
+        const password = this._password.value;
+
         e.preventDefault();
-        firebase.auth().signInWithEmailAndPassword(email, password).catch(function(error) {
+        firebase.auth().signInWithEmailAndPassword(email, password).catch(error => {
             if (error) {
-                self.setState({ error: true });
+                this.setState({ error: true });
             }
         });
     };
 
     render() {
-        var style = {
+        const style = {
             login: { padding: '0 40px' },
             head: { padding: '80px 0 40px' },
             logomark: {
