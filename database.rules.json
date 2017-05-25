@@ -1,9 +1,12 @@
 {
-  "rules": {
-    ".read": true,
-    ".write": "auth != null",
-    "breweries": {
-      ".indexOn": "name"
+    "rules": {
+        ".read": true,
+        ".write": "auth != null",
+        "breweries": {
+            ".indexOn": "name"
+        },
+        "brews": {
+            ".indexOn": "name"
+        }
     }
-  }
 }

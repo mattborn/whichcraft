@@ -8,14 +8,12 @@ import Button from '../components/Button';
 import Logomark from '../components/Logomark';
 import Rating from '../components/Rating';
 
-import firebase from '../firebase';
-
 class Brew extends React.Component {
     static displayName = 'Brew';
 
     static propTypes = {
-        brew: React.PropTypes.object.isRequired,
-        brewery: React.PropTypes.object.isRequired,
+        brew: React.PropTypes.object,
+        brewery: React.PropTypes.object,
         note: React.PropTypes.shape({
             text: React.PropTypes.string,
             liked: React.PropTypes.bool
@@ -81,7 +79,7 @@ class Brew extends React.Component {
                 </p>
                 <hr style={style.rule} />
                 <p style={style.notes}>{note.text}</p>
-                {typeof note.liked != 'undefined' && <Rating liked={note.liked} style={style.rating} />}
+                {typeof note.liked !== 'undefined' && <Rating liked={note.liked} style={style.rating} />}
                 <Button text="Edit" treatment="tiny" onClick={app._openPopover.bind(null, 'edit')} />
                 <Button onClick={app._closePopover} text="Back to brews" treatment="cancel" />
             </div>

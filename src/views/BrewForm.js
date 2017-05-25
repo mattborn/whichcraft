@@ -1,4 +1,3 @@
-import $ from 'jquery';
 import React from 'react';
 import ReactFireMixin from '../components/ReactFire';
 
@@ -105,33 +104,9 @@ class BrewForm extends React.Component {
         // TODO: Make this async/await
         this.createBrewery(brewery).then(breweryId => {
             this.createBrew(name, breweryId).then(brewId => {
-                // Get some brew + brewery data from BreweryDB
-                // TODO: Make sure we match the correct brew
-                // TODO: Provide some error handling, since this is somewhat fragile
-                // $.ajax({
-                //     url: 'https://www.kimonolabs.com/api/ondemand/cmagu84i?apikey=EgIYTM8HavTvDWxbAro1VOHSEB4fsRAP&kimmodify=1',
-                //     crossDomain: true,
-                //     dataType: 'jsonp',
-                //     data: {
-                //         q: name + ' ' + brewery
-                //     },
-                //     success: function(data) {
-                //         // Yucky hardcoded bullshit
-                //         if (data['data']) data = data['data'][0];
-                //         if (data) {
-                //             firebase.database().ref('brews').child(brewId).update({
-                //                 abv: data['abv'] ? data['abv'] : '',
-                //                 style: data['style'] ? data['style']['name'] : ''
-                //             });
-                //         }
-                //     },
-                //     error: function(xhr, status) {
-                //         console.log(status);
-                //     }
-                // });
-
                 const noteRef = firebase.database().ref('users').child(this.props.user).child('notes').push();
                 const noteId = noteRef.key;
+
                 firebase.database().ref('users').child(this.props.user).child('notes').child(noteId).set({
                     brew: brewId,
                     brewery: breweryId,
@@ -167,28 +142,6 @@ class BrewForm extends React.Component {
 
         firebase.database().ref('breweries').child(this.props.note.brewery).update({
             name: brewery
-        });
-
-        $.ajax({
-            url: 'https://www.kimonolabs.com/api/ondemand/cmagu84i?apikey=EgIYTM8HavTvDWxbAro1VOHSEB4fsRAP&kimmodify=1',
-            crossDomain: true,
-            dataType: 'jsonp',
-            data: {
-                q: name + ' ' + brewery
-            },
-            success: data => {
-                // Yucky hardcoded bullshit
-                if (data['data']) data = data['data'][0];
-                if (data) {
-                    firebase.database().ref('brews').child(this.props.note.brew).update({
-                        abv: data['abv'] ? data['abv'] : '',
-                        style: data['style'] ? data['style']['name'] : ''
-                    });
-                }
-            },
-            error: function(xhr, status) {
-                console.log(status);
-            }
         });
 
         firebase.database().ref('users').child(this.props.user).child('notes').child(this.props.noteId).update({

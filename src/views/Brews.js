@@ -33,7 +33,7 @@ export default class Brews extends React.Component {
         return (
             <div style={style.brews}>
                 {notes.length
-                    ? notes.reverse().map((note, index) => {
+                    ? notes.map((note, index) => {
                         return <BrewItem app={app} index={index} note={note} key={note['.key']} />;
                     })
                     : <div style={style.empty}>

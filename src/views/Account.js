@@ -70,7 +70,11 @@ export default class Account extends React.Component {
         const user = this.props.user;
         return (
             <div style={style.account}>
-                <img src={'http://gravatar.com/avatar/' + user.gravatar + '?s=200'} style={style.image} />
+                <img
+                    alt="Your avatar"
+                    src={'http://gravatar.com/avatar/' + user.gravatar + '?s=200'}
+                    style={style.image}
+                />
                 <h1 style={style.name}>{user.name}</h1>
                 <p style={style.email}>{user.email}</p>
                 <p style={style.since}>Since {moment(user.joined).format('MMMM YYYY')}</p>

@@ -104,7 +104,6 @@ class App extends React.Component {
     };
 
     render() {
-        console.log('App:render', this.state);
         const style = {
             app: {
                 height: '100%',

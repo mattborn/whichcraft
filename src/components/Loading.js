@@ -11,7 +11,7 @@ export default class Loading extends React.Component {
         };
         return (
             <Center>
-                <img src="ball-triangle.svg" style={style} />
+                <img alt="Loading WhichCraft" src="ball-triangle.svg" style={style} />
             </Center>
         );
     }
