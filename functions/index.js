@@ -21,7 +21,7 @@ const searchBrews = name => {
 
 exports.searchBrews = functions.https.onRequest((request, response) => {
     return searchBrews(request.query.s).then(data => {
-        response.send(data.data.slice(5));
+        response.send(data.data.slice(0, 6));
     });
 });
 
@@ -34,8 +34,9 @@ exports.addBrewData = functions.database.ref('brews/{brewId}').onWrite(event => 
         console.log(`Found data for: ${brew.name}`);
 
         return event.data.ref.update({
-            abv: brew['abv'] ? brew['abv'] : '',
-            style: brew['style'] ? brew['style']['name'] : ''
+            abv: brew.abv ? brew.abv : '',
+            style: brew.style ? brew.style.name : '',
+            labels: brew.labels || ''
         });
     });
 });
